@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quote Review · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .review-card {
+      padding: 36px;
+      max-width: 720px;
+      margin: 0 auto;
+    }
+    .review-header {
+      text-align: center;
+      margin-bottom: 28px;
+      padding-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .review-header .code {
+      font-family: monospace;
+      font-size: 0.92rem;
+      color: var(--text-muted);
+    }
+    .review-header h2 {
+      margin: 8px 0;
+      font-size: 1.6rem;
+    }
+    .status-banner {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      background: rgba(245, 158, 11, 0.12);
+      color: #b45309;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .section { margin-bottom: 28px; }
+    .section h4 {
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .request-block {
+      padding: 16px;
+      background: var(--white-soft);
+      border-radius: var(--radius-md);
+    }
+    .request-block .desc { font-weight: 600; }
+    .request-block .qty { color: var(--red-deep); font-weight: 700; margin-top: 4px; font-size: 0.9rem; }
+
+    .plan-block {
+      padding: 18px;
+      background: rgba(254, 226, 226, 0.25);
+      border: 1px solid rgba(224, 36, 36, 0.18);
+      border-radius: var(--radius-md);
+    }
+    .plan-block .label { font-size: 0.78rem; color: var(--text-muted); margin-bottom: 8px; }
+    .plan-block .body { font-size: 0.95rem; color: var(--gray-900); line-height: 1.6; }
+
+    .total-block {
+      padding: 24px;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      border-radius: var(--radius-lg);
+      text-align: center;
+      margin: 16px 0;
+    }
+    .total-block .label { font-size: 0.85rem; opacity: 0.9; }
+    .total-block .amount { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em; margin-top: 4px; }
+    .total-block .valid { font-size: 0.82rem; opacity: 0.85; margin-top: 8px; }
+
+    .btn-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .btn-row .btn-decline {
+      background: transparent;
+      border: 2px solid var(--gray-300);
+      color: var(--gray-700);
+      font-weight: 600;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+    }
+    .btn-row .btn-decline:hover { border-color: var(--red); color: var(--red); }
+    .btn-row .btn-accept {
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      font-weight: 700;
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      box-shadow: 0 6px 16px var(--red-glow);
+    }
+    .btn-row .btn-accept:hover { transform: translateY(-2px); box-shadow: 0 8px 20px var(--red-glow); }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Quote Review</h1>
+        <div class="subtitle">Review the warehouse's proposed plan and price · single-shot accept or decline</div>
+      </div>
+      <div class="page-header-actions">
+        <a href="quote-request.html" class="btn btn-secondary">← Back to my quotes</a>
+      </div>
+    </div>
+
+    <div class="review-card glass-strong" id="reviewCard"></div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('wholesaler', 'quotes', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id') || 'q-002';
+    const q = M.state.quotes.find(x => x.id === id) || M.state.quotes[1];
+
+    const wh = M.getWarehouse(q.warehouseId);
+    const r = q.response || {
+      fulfillmentDetails: 'Combined 10× 1kg packs + 1× 2kg pack from Batch B-2026-0425. Vacuum-sealed, ready for delivery within 24 hours.',
+      quotedTotal: 386.00,
+      validUntil: '2026-05-12',
+      respondedBy: 'Manager Aiman',
+      respondedAt: '2026-05-04 16:42',
+    };
+
+    const itemsHtml = q.items.map(i => `
+      <div class="request-block" style="margin-bottom: 8px;">
+        <div class="desc">${i.description}</div>
+        <div class="qty">Requested: ${i.requestedQty} ${i.requestedUnit}</div>
+      </div>`).join('');
+
+    document.getElementById('reviewCard').innerHTML = `
+      <div class="review-header">
+        <div class="code">${q.code}</div>
+        <h2>Warehouse has quoted your request</h2>
+        <div class="status-banner">⏳ Awaiting your decision</div>
+      </div>
+
+      <div class="section">
+        <h4>📋 Your Original Request</h4>
+        ${itemsHtml}
+        ${q.notes ? `<div class="text-muted fs-sm" style="margin-top: 8px; font-style: italic;">"${q.notes}"</div>` : ''}
+      </div>
+
+      <div class="section">
+        <h4>🏭 Warehouse's Fulfillment Plan</h4>
+        <div class="plan-block">
+          <div class="label">From ${wh.name} · Quoted by ${r.respondedBy} on ${r.respondedAt.split(' ')[0]}</div>
+          <div class="body">${r.fulfillmentDetails}</div>
+        </div>
+      </div>
+
+      <div class="total-block">
+        <div class="label">Quoted Total</div>
+        <div class="amount">${M.formatRM(r.quotedTotal)}</div>
+        <div class="valid">⏱ Valid until ${r.validUntil}</div>
+      </div>
+
+      <div class="halal-badge" style="width: 100%; justify-content: center; padding: 10px 16px; margin-bottom: 20px;">
+        <span class="ring">✓</span>
+        <span>JAKIM Halal certified · supplier traceable</span>
+      </div>
+
+      <div style="text-align: center; padding: 14px; background: rgba(254, 226, 226, 0.25); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--gray-700);">
+        ⚠️ Single-shot quote: accept to proceed with payment, or decline to close. No counter-offers.
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-decline" onclick="if (confirm('Decline this quote?')) location.href='quote-request.html'">Decline</button>
+        <button class="btn-accept" onclick="alert('Quote accepted — redirecting to payment...'); setTimeout(()=>location.href='orders.html', 600);">Accept & Pay ${M.formatRM(r.quotedTotal)} →</button>
+      </div>
+    `;
+  </script>
+</body>
+</html>

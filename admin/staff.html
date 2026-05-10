@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff & RBAC · Admin · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .perm-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin: 2px;
+    }
+    .perm-on  { background: var(--red-soft); color: var(--red-deep); }
+    .perm-off { background: var(--gray-100); color: var(--gray-500); text-decoration: line-through; opacity: 0.6; }
+
+    .perm-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .perm-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      background: var(--white);
+      transition: all 0.15s ease;
+    }
+    .perm-toggle:hover { border-color: var(--gray-300); }
+    .perm-toggle input { width: 18px; height: 18px; accent-color: var(--red); cursor: pointer; }
+    .perm-toggle .info { flex: 1; }
+    .perm-toggle .info .name { font-weight: 600; font-size: 0.9rem; }
+    .perm-toggle .info .desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .perm-toggle.checked { border-color: var(--red); background: rgba(254, 226, 226, 0.3); }
+
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+    }
+    .role-pill.muted {
+      background: var(--gray-200);
+      color: var(--gray-700);
+    }
+
+    .staff-row { display: flex; align-items: center; gap: 12px; }
+    .staff-avatar {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      display: grid; place-items: center;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .staff-row .info .name { font-weight: 600; }
+    .staff-row .info .email { font-size: 0.78rem; color: var(--text-muted); }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Staff & RBAC</h1>
+        <div class="subtitle">Admin staff accounts · permission flags per dashboard section</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-primary" onclick="window.SheepyNav.openModal('addStaffModal')"><span>＋</span> Create Staff</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Total Admin Staff</div>
+        <div class="value" id="totalStaff">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Super Admins</div>
+        <div class="value" id="superAdmins">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Restricted Roles</div>
+        <div class="value" id="restrictedRoles">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Last Login Activity</div>
+        <div class="value" style="font-size: 1rem;">~ 2 min ago</div>
+      </div>
+    </div>
+
+    <div class="glass-strong" style="overflow: hidden;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Staff</th>
+            <th>Role</th>
+            <th>Permissions</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="staffBody"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ============ CREATE STAFF MODAL ============ -->
+  <div class="modal-backdrop" id="addStaffModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Create Admin Staff</h3>
+        <button class="modal-close" onclick="window.SheepyNav.closeModal('addStaffModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Account</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Full Name *</label>
+            <input class="form-input" placeholder="e.g. Cik Sarah" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input class="form-input" type="email" placeholder="sarah@sheepyfarm.my" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Initial Password *</label>
+            <input class="form-input" type="text" placeholder="Auto-generated" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role Preset</label>
+            <select class="form-select" id="rolePreset">
+              <option value="custom">Custom (set below)</option>
+              <option value="super_admin">Super Admin</option>
+              <option value="product_manager">Product Manager</option>
+              <option value="analyst">Analyst</option>
+              <option value="sales">Sales</option>
+            </select>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin: 20px 0 12px;">Section Permissions</h4>
+        <div class="perm-grid" id="permGrid"></div>
+
+        <div class="glass-red glass-card-sm" style="padding: 12px; font-size: 0.85rem; margin-top: 16px;">
+          🛡️ Staff member can only see + access checked sections in the admin dashboard. Permissions can be changed any time.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="window.SheepyNav.closeModal('addStaffModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.closeModal('addStaffModal')">Create & Send Credentials →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('admin', 'staff', { showSearch: false });
+
+    const M = window.SheepyMock;
+
+    const ALL_PERMS = [
+      { key: 'products',    name: 'Products',     desc: 'Manage product catalog' },
+      { key: 'stock',       name: 'Stock',        desc: 'View + adjust inventory' },
+      { key: 'analysis',    name: 'Analysis',     desc: 'View KPI dashboards' },
+      { key: 'reports',     name: 'Reports',      desc: 'Generate + export reports' },
+      { key: 'warehouses',  name: 'Warehouses',   desc: 'Manage regional warehouses' },
+      { key: 'wholesalers', name: 'Wholesalers',  desc: 'Create + manage B2B accounts' },
+      { key: 'staff',       name: 'Staff & RBAC', desc: 'Manage admin staff (super only)' },
+      { key: 'settings',    name: 'Settings',     desc: 'Payment + site + halal cert' },
+    ];
+
+    // Render staff table
+    const html = M.state.adminStaff.map(s => {
+      const initial = s.name.charAt(0);
+      const roleLabel = s.role.replace(/_/g, ' ');
+      const isSuper = s.role === 'super_admin';
+      const permPills = ALL_PERMS.map(p => {
+        const on = s.permissions.includes(p.key);
+        return `<span class="perm-chip ${on ? 'perm-on' : 'perm-off'}">${p.name}</span>`;
+      }).join('');
+      return `
+        <tr>
+          <td>
+            <div class="staff-row">
+              <div class="staff-avatar">${initial}</div>
+              <div class="info">
+                <div class="name">${s.name}</div>
+                <div class="email">${s.email}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-pill ${isSuper ? '' : 'muted'}">${roleLabel}</span></td>
+          <td><div style="display:flex; flex-wrap:wrap;">${permPills}</div></td>
+          <td>
+            <div style="display:flex; gap:6px; justify-content:flex-end;">
+              <button class="btn btn-secondary btn-sm">Edit</button>
+              <button class="btn btn-ghost btn-sm">⋯</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+    document.getElementById('staffBody').innerHTML = html;
+
+    document.getElementById('totalStaff').textContent = M.state.adminStaff.length;
+    document.getElementById('superAdmins').textContent = M.state.adminStaff.filter(s => s.role === 'super_admin').length;
+    document.getElementById('restrictedRoles').textContent = M.state.adminStaff.filter(s => s.role !== 'super_admin').length;
+
+    // Permission toggles in modal
+    const permGrid = ALL_PERMS.map(p => `
+      <label class="perm-toggle" data-perm="${p.key}">
+        <input type="checkbox" data-perm-input="${p.key}" />
+        <div class="info">
+          <div class="name">${p.name}</div>
+          <div class="desc">${p.desc}</div>
+        </div>
+      </label>
+    `).join('');
+    document.getElementById('permGrid').innerHTML = permGrid;
+
+    document.querySelectorAll('[data-perm-input]').forEach(input => {
+      input.addEventListener('change', e => {
+        e.target.closest('.perm-toggle').classList.toggle('checked', e.target.checked);
+      });
+    });
+
+    document.getElementById('rolePreset').addEventListener('change', e => {
+      const preset = e.target.value;
+      const presets = {
+        super_admin:     ['products','stock','analysis','reports','warehouses','wholesalers','staff','settings'],
+        product_manager: ['products','stock','reports'],
+        analyst:         ['analysis','reports'],
+        sales:           ['wholesalers','reports'],
+        custom:          [],
+      };
+      const allowed = presets[preset] || [];
+      document.querySelectorAll('[data-perm-input]').forEach(input => {
+        const on = allowed.includes(input.dataset.permInput);
+        input.checked = on;
+        input.closest('.perm-toggle').classList.toggle('checked', on);
+      });
+    });
+  </script>
+</body>
+</html>

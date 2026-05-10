@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Warehouses · Admin · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .map-card {
+      padding: 24px;
+      margin-bottom: 24px;
+      min-height: 320px;
+      background:
+        radial-gradient(ellipse at top right, rgba(224,36,36,0.08), transparent 60%),
+        linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));
+      position: relative;
+      overflow: hidden;
+    }
+    .map-stage {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      background: linear-gradient(160deg, #f3f4f6, #e5e7eb);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+    }
+    .map-stage::before {
+      content: '🇲🇾 Malaysia';
+      position: absolute;
+      top: 16px; left: 16px;
+      font-weight: 700;
+      color: var(--gray-700);
+    }
+    .map-pin {
+      position: absolute;
+      width: 36px; height: 36px;
+      transform: translate(-50%, -100%);
+      cursor: pointer;
+    }
+    .map-pin .dot {
+      width: 36px; height: 36px;
+      border-radius: 50% 50% 50% 0;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      transform: rotate(-45deg);
+      box-shadow: 0 4px 14px var(--red-glow);
+      display: grid; place-items: center;
+      color: #fff; font-weight: 700;
+      transform-origin: center;
+    }
+    .map-pin .dot span { transform: rotate(45deg); font-size: 0.78rem; }
+    .map-pin .ring {
+      position: absolute;
+      inset: -8px;
+      border: 2px solid rgba(224, 36, 36, 0.3);
+      border-radius: 50%;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .map-pin.inactive .dot { background: var(--gray-500); box-shadow: none; }
+    .map-pin.inactive .ring { display: none; }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.6; }
+      50% { transform: scale(1.6); opacity: 0; }
+    }
+    .map-pin .label {
+      position: absolute;
+      bottom: -28px; left: 50%;
+      transform: translateX(-50%);
+      background: var(--white);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--black);
+      white-space: nowrap;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .warehouse-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .warehouse-card {
+      padding: 24px;
+      position: relative;
+    }
+    .warehouse-card .header-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .warehouse-card .name {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+    .warehouse-card .region {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .warehouse-card .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--gray-100);
+    }
+    .warehouse-card .stat .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .warehouse-card .stat .value {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+    .warehouse-card .footer-row {
+      margin-top: 16px;
+      display: flex;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Warehouses</h1>
+        <div class="subtitle">Regional cold-chain warehouses · the storefronts behind every order</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-primary" onclick="window.SheepyNav.openModal('addWarehouseModal')"><span>＋</span> Add Warehouse</button>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="map-card glass-strong">
+      <h3 style="margin-bottom: 16px;">Coverage Map</h3>
+      <div class="map-stage" id="mapStage"></div>
+    </div>
+
+    <!-- Warehouses grid -->
+    <div class="warehouse-grid" id="warehouseGrid"></div>
+
+  </main>
+
+  <!-- ============ ADD WAREHOUSE MODAL ============ -->
+  <div class="modal-backdrop" id="addWarehouseModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Add Warehouse</h3>
+        <button class="modal-close" onclick="window.SheepyNav.closeModal('addWarehouseModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Warehouse Name *</label>
+            <input class="form-input" placeholder="e.g. Kota Kinabalu Hub" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Code *</label>
+            <input class="form-input" placeholder="KK" maxlength="4" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Region / State *</label>
+          <select class="form-select">
+            <option>Selangor</option><option>Kuala Lumpur</option>
+            <option>Penang</option><option>Johor</option>
+            <option>Sarawak</option><option>Sabah</option>
+            <option>Perak</option><option>Kedah</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address *</label>
+          <textarea class="form-textarea" placeholder="Full street address..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Latitude</label>
+            <input class="form-input" type="number" step="any" placeholder="3.0738" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Longitude</label>
+            <input class="form-input" type="number" step="any" placeholder="101.5183" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Delivery Radius (km) *</label>
+            <input class="form-input" type="number" value="50" />
+            <div class="form-hint">Max safe cold-chain delivery range</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Status</label>
+            <select class="form-select">
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="window.SheepyNav.closeModal('addWarehouseModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.closeModal('addWarehouseModal')">Save Warehouse →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('admin', 'warehouses', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const warehouses = M.state.warehouses;
+
+    // Map pins (positioned approx for Malaysia)
+    const pinPositions = {
+      'wh-kl':  { left: '45%', top: '50%' },
+      'wh-pen': { left: '32%', top: '32%' },
+      'wh-jb':  { left: '50%', top: '78%' },
+      'wh-kch': { left: '78%', top: '60%' },
+    };
+    const pinsHtml = warehouses.map(w => {
+      const pos = pinPositions[w.id] || { left: '50%', top: '50%' };
+      const inactiveCls = w.active ? '' : ' inactive';
+      const ring = w.active ? '<div class="ring"></div>' : '';
+      return `
+        <div class="map-pin${inactiveCls}" style="left:${pos.left}; top:${pos.top};">
+          ${ring}
+          <div class="dot"><span>${w.code}</span></div>
+          <div class="label">${w.name}</div>
+        </div>`;
+    }).join('');
+    document.getElementById('mapStage').innerHTML = pinsHtml;
+
+    // Warehouse grid
+    const grid = warehouses.map(w => {
+      const orderCount = M.ordersForWarehouse(w.id).length;
+      const stockCount = M.state.stock.filter(s => s.warehouseId === w.id).reduce((sum, s) => sum + s.available, 0);
+      const wholesalerCount = M.state.wholesalers.filter(ws => ws.assignedWarehouseId === w.id).length;
+      const statusCls = w.active ? 'pill-active' : 'pill-muted';
+      const statusLabel = w.active ? 'Active' : 'Inactive';
+      return `
+        <div class="warehouse-card glass-strong">
+          <div class="header-row">
+            <div>
+              <div class="name">${w.name}</div>
+              <div class="region">${w.region}</div>
+            </div>
+            <span class="pill ${statusCls}">${statusLabel}</span>
+          </div>
+          <div style="font-size: 0.88rem; color: var(--gray-700); margin-bottom: 4px;">📍 ${w.address}</div>
+          <div style="font-size: 0.85rem; color: var(--text-muted);">Delivery radius: <strong style="color: var(--black);">${w.deliveryRadiusKm} km</strong></div>
+
+          <div class="stat-row">
+            <div class="stat">
+              <div class="label">Wholesalers</div>
+              <div class="value">${wholesalerCount}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Stock Units</div>
+              <div class="value">${stockCount.toLocaleString()}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Active Orders</div>
+              <div class="value">${orderCount}</div>
+            </div>
+            <div class="stat">
+              <div class="label">Code</div>
+              <div class="value">${w.code}</div>
+            </div>
+          </div>
+
+          <div class="footer-row">
+            <button class="btn btn-secondary btn-sm" style="flex:1;">View Details</button>
+            <button class="btn btn-ghost btn-sm" title="Edit">✏️</button>
+          </div>
+        </div>`;
+    }).join('');
+    document.getElementById('warehouseGrid').innerHTML = grid;
+  </script>
+</body>
+</html>

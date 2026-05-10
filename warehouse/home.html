@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home · Warehouse · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .home-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+    .order-snapshot { padding: 24px; }
+    .order-snapshot .header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .order-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      background: var(--white-soft);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      transition: all 0.15s ease;
+    }
+    .order-card:hover { background: var(--white); border-left: 3px solid var(--red); padding-left: 11px; }
+    .order-card .num { font-weight: 800; font-size: 1.4rem; color: var(--red); width: 36px; text-align: center; }
+    .order-card .name { font-weight: 600; }
+    .order-card .meta { font-size: 0.78rem; color: var(--text-muted); }
+
+    .rider-list { padding: 24px; }
+    .rider-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+    }
+    .rider-card.idle    { background: rgba(16, 185, 129, 0.08); }
+    .rider-card.active  { background: rgba(245, 158, 11, 0.10); }
+    .rider-avatar {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      display: grid; place-items: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .rider-card .info { flex: 1; }
+    .rider-card .info .name { font-weight: 600; }
+    .rider-card .info .status { font-size: 0.78rem; color: var(--text-muted); }
+    .rider-card .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--gray-300);
+    }
+    .rider-card .dot.idle    { background: #10b981; }
+    .rider-card .dot.active  { background: #f59e0b; }
+
+    @media (max-width: 1024px) { .home-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Welcome, Manager Aiman</h1>
+        <div class="subtitle">Klang Valley Warehouse · Tuesday, May 5 2026</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary"><span>📦</span> Receive Stock</button>
+        <button class="btn btn-primary"><span>🚚</span> Dispatch Now</button>
+      </div>
+    </div>
+
+    <!-- KPI tiles -->
+    <div class="kpi-grid">
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Pending Orders</div>
+        <div class="value" id="kpiPending">—</div>
+        <div class="delta" style="color: var(--text-muted)">need picking</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Pending Quotes</div>
+        <div class="value" id="kpiQuotes" style="color: var(--status-warn);">—</div>
+        <div class="delta" style="color: var(--text-muted)">awaiting price quote</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Today's Dispatches</div>
+        <div class="value" id="kpiDispatch">—</div>
+        <div class="delta delta-up">▲ on track</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Low-Stock SKUs</div>
+        <div class="value" id="kpiLow" style="color: var(--red);">—</div>
+        <div class="delta delta-down">below reorder threshold</div>
+      </div>
+    </div>
+
+    <!-- Order snapshot + rider list -->
+    <div class="home-grid">
+      <div class="order-snapshot glass-strong">
+        <div class="header">
+          <div>
+            <h3>Today's Order Queue</h3>
+            <div class="text-muted fs-sm">Sorted by placed time</div>
+          </div>
+          <a href="orders.html" class="text-red fw-semibold fs-sm">View all orders →</a>
+        </div>
+        <div id="orderList"></div>
+      </div>
+
+      <div class="rider-list glass-strong">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3>Riders Today</h3>
+          <span class="chip chip-red">3 available</span>
+        </div>
+        <div id="riderListEl"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('warehouse', 'home', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const wh = 'wh-kl';
+
+    // KPIs
+    const orders = M.ordersForWarehouse(wh);
+    const quotes = M.quotesForWarehouse(wh);
+    document.getElementById('kpiPending').textContent  = orders.filter(o => ['new','picking'].includes(o.status)).length;
+    document.getElementById('kpiQuotes').textContent   = quotes.filter(q => q.status === 'pending').length;
+    document.getElementById('kpiDispatch').textContent = orders.filter(o => ['out_for_delivery','delivered'].includes(o.status)).length;
+    document.getElementById('kpiLow').textContent      = M.state.stock.filter(s => s.warehouseId === wh && s.available <= s.reorderThreshold).length;
+
+    // Order snapshot
+    const orderHtml = orders.slice(0, 6).map((o, idx) => {
+      const ws = M.getWholesaler(o.wholesalerId);
+      const stCls = {
+        new: 'pill-muted',
+        picking: 'pill-warn',
+        out_for_delivery: 'pill-info',
+        delivered: 'pill-active',
+      }[o.status] || 'pill-muted';
+      return `
+        <div class="order-card">
+          <div class="num">#${idx + 1}</div>
+          <div>
+            <div class="name">${o.code}</div>
+            <div class="meta">${ws.businessName} · ${o.items.length} items · placed ${o.placedAt.split(' ')[1]}</div>
+          </div>
+          <div class="text-right">
+            <div class="fw-bold">${M.formatRM(o.total)}</div>
+            <div class="meta">${o.fulfillmentMethod}</div>
+          </div>
+          <span class="pill ${stCls}">${o.status.replace(/_/g, ' ')}</span>
+        </div>`;
+    }).join('');
+    document.getElementById('orderList').innerHTML = orderHtml || '<div class="text-muted text-center" style="padding:40px;">All caught up ✓</div>';
+
+    // Riders
+    const riders = M.state.riders.filter(r => r.warehouseId === wh);
+    const ridersHtml = riders.map(r => {
+      const initial = r.name.split(' ').slice(-1)[0].charAt(0);
+      const order = r.activeOrderId ? M.state.orders.find(o => o.id === r.activeOrderId) : null;
+      return `
+        <div class="rider-card ${r.status}">
+          <div class="rider-avatar">${initial}</div>
+          <div class="info">
+            <div class="name">${r.name}</div>
+            <div class="status">${r.status === 'active' ? 'Out: ' + (order ? order.code : '—') : 'Available · Idle'}</div>
+          </div>
+          <div class="dot ${r.status}"></div>
+        </div>`;
+    }).join('');
+    document.getElementById('riderListEl').innerHTML = ridersHtml;
+  </script>
+</body>
+</html>

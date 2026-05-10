@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staff Status · Warehouse · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .staff-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .staff-col { padding: 24px; }
+    .staff-col .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .staff-tile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: var(--radius-md);
+      margin-bottom: 10px;
+      transition: all 0.15s ease;
+    }
+    .staff-tile.idle    { background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); }
+    .staff-tile.active  { background: rgba(245, 158, 11, 0.10); border: 1px solid rgba(245, 158, 11, 0.2); }
+    .staff-tile.packing { background: rgba(245, 158, 11, 0.10); border: 1px solid rgba(245, 158, 11, 0.2); }
+    .staff-avatar {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      display: grid; place-items: center;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .staff-tile .info { flex: 1; min-width: 0; }
+    .staff-tile .info .name { font-weight: 600; }
+    .staff-tile .info .status { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .staff-tile .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--gray-300);
+    }
+    .staff-tile .dot.idle { background: #10b981; }
+    .staff-tile .dot.active, .staff-tile .dot.packing { background: #f59e0b; }
+
+    .role-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    .role-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    @media (max-width: 1024px) { .staff-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Staff Status</h1>
+        <div class="subtitle">Live overview of packing + driver staff · who's busy, who's free</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary"><span>📤</span> Export Roster</button>
+      </div>
+    </div>
+
+    <!-- KPI summary -->
+    <div class="kpi-grid">
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Packing Active</div>
+        <div class="value" id="kpiPkActive" style="color: var(--status-warn);">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Packing Idle</div>
+        <div class="value" id="kpiPkIdle" style="color: var(--status-active);">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Drivers Out</div>
+        <div class="value" id="kpiDrActive" style="color: var(--status-warn);">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Drivers Idle</div>
+        <div class="value" id="kpiDrIdle" style="color: var(--status-active);">—</div>
+      </div>
+    </div>
+
+    <div class="staff-grid">
+
+      <!-- ============ PACKING STAFF ============ -->
+      <div class="staff-col glass-strong">
+        <div class="header">
+          <div>
+            <h3>📦 Packing Staff</h3>
+            <div class="text-muted fs-sm">Mobile-only role</div>
+          </div>
+          <span class="chip">KL warehouse</span>
+        </div>
+
+        <div class="role-divider">Currently packing</div>
+        <div id="packingActive"></div>
+
+        <div class="role-divider">Available</div>
+        <div id="packingIdle"></div>
+
+        <div style="margin-top: 16px; padding: 14px; background: var(--white-soft); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted);">
+          💡 Packing staff pick up new orders from their mobile queue. Manager doesn't need to assign — orders auto-route by warehouse.
+        </div>
+      </div>
+
+      <!-- ============ DRIVER STAFF ============ -->
+      <div class="staff-col glass-strong">
+        <div class="header">
+          <div>
+            <h3>🚚 Driver Staff</h3>
+            <div class="text-muted fs-sm">Mobile-only role</div>
+          </div>
+          <span class="chip">KL warehouse</span>
+        </div>
+
+        <div class="role-divider">Currently out</div>
+        <div id="driverActive"></div>
+
+        <div class="role-divider">Available</div>
+        <div id="driverIdle"></div>
+
+        <div style="margin-top: 16px; padding: 14px; background: var(--white-soft); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--text-muted);">
+          💡 Drivers grab packed orders from their mobile route queue. Cold-chain handover photo + temp logged on every delivery.
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('warehouse', 'staff', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const wh = 'wh-kl';
+
+    function renderStaffTile(s, role) {
+      const init = s.name.split(' ').slice(-1)[0].charAt(0);
+      const isIdle = s.status === 'idle';
+      const order = s.activeOrderId ? M.state.orders.find(o => o.id === s.activeOrderId) : null;
+      const orderInfo = order
+        ? (role === 'packing' ? `Packing ${order.code}` : `Delivering ${order.code}`)
+        : 'Available';
+      const roleInfo = isIdle ? (role === 'packing' ? 'Last pack 18m ago' : 'Last delivery 1h ago') : '';
+      return `
+        <div class="staff-tile ${s.status}">
+          <div class="staff-avatar">${init}</div>
+          <div class="info">
+            <div class="name">${s.name}</div>
+            <div class="status">${isIdle ? roleInfo : orderInfo}</div>
+          </div>
+          <span class="pill ${isIdle ? 'pill-active' : 'pill-warn'}">${isIdle ? 'Idle' : (role === 'packing' ? 'Packing' : 'Out')}</span>
+        </div>`;
+    }
+
+    // Packing staff
+    const packingStaff = M.state.packingStaff.filter(p => p.warehouseId === wh);
+    const pkActive = packingStaff.filter(p => p.status !== 'idle');
+    const pkIdle   = packingStaff.filter(p => p.status === 'idle');
+    document.getElementById('packingActive').innerHTML = pkActive.map(s => renderStaffTile(s, 'packing')).join('') || '<div class="text-muted fs-sm">No one packing right now</div>';
+    document.getElementById('packingIdle').innerHTML   = pkIdle.map(s => renderStaffTile(s, 'packing')).join('') || '<div class="text-muted fs-sm">All staff busy</div>';
+
+    // Drivers
+    const drivers = M.state.drivers.filter(d => d.warehouseId === wh);
+    const drActive = drivers.filter(d => d.status === 'active');
+    const drIdle   = drivers.filter(d => d.status === 'idle');
+    document.getElementById('driverActive').innerHTML = drActive.map(s => renderStaffTile(s, 'driver')).join('') || '<div class="text-muted fs-sm">No drivers out</div>';
+    document.getElementById('driverIdle').innerHTML   = drIdle.map(s => renderStaffTile(s, 'driver')).join('') || '<div class="text-muted fs-sm">All drivers busy</div>';
+
+    // KPIs
+    document.getElementById('kpiPkActive').textContent = pkActive.length;
+    document.getElementById('kpiPkIdle').textContent   = pkIdle.length;
+    document.getElementById('kpiDrActive').textContent = drActive.length;
+    document.getElementById('kpiDrIdle').textContent   = drIdle.length;
+  </script>
+</body>
+</html>

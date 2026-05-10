@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Done · Driver · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <link rel="stylesheet" href="../shared/mobile.css" />
+</head>
+<body class="mobile-shell">
+
+  <header class="m-topbar">
+    <div>
+      <div class="greet">Today's Deliveries</div>
+      <div class="sub">2 done · 0 incidents</div>
+    </div>
+    <button class="icon-btn">📤</button>
+  </header>
+
+  <main class="m-content">
+
+    <div class="m-stats-grid">
+      <div class="m-stat-tile"><div class="num">2</div><div class="lbl">Delivered</div></div>
+      <div class="m-stat-tile"><div class="num" style="color:#10b981;">100%</div><div class="lbl">On-time</div></div>
+      <div class="m-stat-tile"><div class="num">RM 38</div><div class="lbl">Earnings</div></div>
+      <div class="m-stat-tile"><div class="num">22m</div><div class="lbl">Avg Run</div></div>
+    </div>
+
+    <h3 style="margin-bottom: 12px; font-size: 1rem;">Completed Today</h3>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Sambal Sedap Resto</span>
+        <span class="pill pill-active" style="margin-left:auto;">Delivered</span>
+      </div>
+      <div style="font-family: monospace; font-size: 0.85rem; color: var(--gray-700); margin-bottom: 4px;">SF-2026-0428-014</div>
+      <div class="addr">📍 24 Lebuh Chulia · received by Cik Salwa</div>
+      <div class="meta">
+        <span>09:42 · -19°C handover</span>
+        <span>📷 Photo logged</span>
+      </div>
+    </div>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Mat Frozen Mart</span>
+        <span class="pill pill-active" style="margin-left:auto;">Delivered</span>
+      </div>
+      <div style="font-family: monospace; font-size: 0.85rem; color: var(--gray-700); margin-bottom: 4px;">SF-2026-0501-001</div>
+      <div class="addr">📍 12 Jalan Bangsar · received by Pak Mat</div>
+      <div class="meta">
+        <span>11:15 · -18°C handover</span>
+        <span>📷 Photo logged</span>
+      </div>
+    </div>
+
+  </main>
+
+  <div data-slot="bottom-nav"></div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    const bnHtml = window.SheepyNav.BOTTOM_NAVS.driver.map(it => `
+      <a href="${it.href}" class="m-bn-item${it.key === 'done' ? ' active' : ''}">
+        <span class="icon">${it.icon}</span><span>${it.label}</span>
+      </a>`).join('');
+    document.querySelector('[data-slot="bottom-nav"]').outerHTML = `<nav class="m-bottom-nav">${bnHtml}</nav>`;
+  </script>
+</body>
+</html>

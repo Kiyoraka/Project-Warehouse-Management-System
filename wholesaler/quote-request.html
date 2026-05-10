@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit Quote · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .quote-form { padding: 32px; max-width: 800px; }
+    .item-row {
+      padding: 16px;
+      background: var(--white-soft);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+      position: relative;
+    }
+    .item-row .remove-btn {
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+    }
+    .item-row .remove-btn:hover { background: var(--red-soft); color: var(--red); }
+    .add-row-btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-md);
+      background: transparent;
+      color: var(--gray-500);
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .add-row-btn:hover { border-color: var(--red); color: var(--red); background: rgba(254, 226, 226, 0.2); }
+
+    .info-callout {
+      padding: 16px;
+      background: rgba(254, 226, 226, 0.3);
+      border: 1px solid rgba(224, 36, 36, 0.2);
+      border-radius: var(--radius-md);
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .info-callout .icon { font-size: 1.6rem; flex-shrink: 0; }
+
+    .my-quotes {
+      padding: 24px;
+      max-width: 800px;
+      margin-top: 24px;
+    }
+    .quote-history-card {
+      padding: 14px;
+      background: var(--white-soft);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .quote-history-card a { font-size: 0.85rem; font-weight: 600; }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Submit Custom Quote</h1>
+        <div class="subtitle">For non-standard quantities or custom-cut requirements · warehouse will price within hours</div>
+      </div>
+      <div class="page-header-actions">
+        <a href="catalog.html" class="btn btn-secondary">← Back to catalog</a>
+      </div>
+    </div>
+
+    <div class="info-callout">
+      <div class="icon">💡</div>
+      <div>
+        <strong>How custom quotes work:</strong> Submit your request below → warehouse staff fills in fulfillment details + final price → you accept or decline.
+        <strong>Single-shot:</strong> the warehouse quotes once, no back-and-forth — make sure your request is clear and complete.
+      </div>
+    </div>
+
+    <div class="quote-form glass-strong">
+
+      <h3 style="margin-bottom: 16px;">What do you need?</h3>
+
+      <div id="itemRows">
+        <div class="item-row">
+          <button class="remove-btn" onclick="removeRow(this)">✕</button>
+          <div class="form-group">
+            <label class="form-label">Description *</label>
+            <textarea class="form-textarea" placeholder="e.g. Frozen lamb shoulder, custom 8 kg cut for whole-roast event"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Quantity *</label>
+              <input class="form-input" type="number" placeholder="8" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Unit *</label>
+              <select class="form-select">
+                <option>kg</option>
+                <option>g</option>
+                <option>pieces</option>
+                <option>boxes</option>
+                <option>cartons</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="add-row-btn" onclick="addRow()">＋ Add another item</button>
+
+      <div class="form-group" style="margin-top: 24px;">
+        <label class="form-label">Notes for warehouse staff</label>
+        <textarea class="form-textarea" placeholder="Any special handling, deadlines, packaging preferences, or context (e.g. 'for upcoming kenduri event end of May')"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Need by date (optional)</label>
+        <input class="form-input" type="date" />
+        <div class="form-hint">Helps warehouse prioritize and confirm feasibility</div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px;">
+        <button class="btn btn-ghost">Cancel</button>
+        <button class="btn btn-primary" onclick="submitQuote()">Submit Quote Request →</button>
+      </div>
+    </div>
+
+    <!-- Past quotes -->
+    <div class="my-quotes glass-strong">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3>Your Recent Quotes</h3>
+      </div>
+      <div id="quoteHistory"></div>
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('wholesaler', 'quotes', { showSearch: false });
+
+    function addRow() {
+      const div = document.createElement('div');
+      div.className = 'item-row';
+      div.innerHTML = `
+        <button class="remove-btn" onclick="removeRow(this)">✕</button>
+        <div class="form-group">
+          <label class="form-label">Description *</label>
+          <textarea class="form-textarea" placeholder="Describe what you need..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Quantity *</label>
+            <input class="form-input" type="number" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Unit *</label>
+            <select class="form-select">
+              <option>kg</option><option>g</option><option>pieces</option><option>boxes</option><option>cartons</option>
+            </select>
+          </div>
+        </div>`;
+      document.getElementById('itemRows').appendChild(div);
+    }
+    function removeRow(btn) {
+      const rows = document.querySelectorAll('.item-row');
+      if (rows.length > 1) btn.closest('.item-row').remove();
+    }
+    function submitQuote() {
+      alert('Quote request submitted ✓ Warehouse will respond within hours.');
+      setTimeout(() => location.href = 'quote-review.html?id=q-002', 600);
+    }
+    window.addRow = addRow;
+    window.removeRow = removeRow;
+    window.submitQuote = submitQuote;
+
+    // Render quote history
+    const M = window.SheepyMock;
+    const quotes = M.quotesForWholesaler(M.state.currentWholesalerId);
+    const html = quotes.map(q => {
+      const stCls = q.status === 'pending' ? 'pill-warn' : (q.status === 'accepted' ? 'pill-active' : (q.status === 'quoted' ? 'pill-info' : 'pill-muted'));
+      const action = q.status === 'quoted' ? `<a href="quote-review.html?id=${q.id}">Review →</a>` :
+                     q.status === 'pending' ? '<span class="text-muted fs-sm">Awaiting warehouse</span>' :
+                     `<a href="#">View →</a>`;
+      return `
+        <div class="quote-history-card">
+          <div>
+            <div style="font-family: monospace; font-weight: 600; font-size: 0.92rem;">${q.code}</div>
+            <div style="font-size: 0.85rem; color: var(--gray-700); margin-top: 4px;">${q.items[0].description}</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">Submitted ${q.submittedAt}</div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <span class="pill ${stCls}">${q.status}</span>
+            ${action}
+          </div>
+        </div>`;
+    }).join('') || '<div class="text-muted text-center" style="padding: 30px;">No quote requests yet</div>';
+    document.getElementById('quoteHistory').innerHTML = html;
+  </script>
+</body>
+</html>

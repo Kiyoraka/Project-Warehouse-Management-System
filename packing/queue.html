@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Packing Queue · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <link rel="stylesheet" href="../shared/mobile.css" />
+</head>
+<body class="mobile-shell">
+
+  <header class="m-topbar">
+    <div>
+      <div class="greet">Hi <span id="userName">Cik Liyana</span></div>
+      <div class="sub">Packing · Klang Valley · <span id="todayLabel">Tuesday May 5</span></div>
+    </div>
+    <button class="icon-btn">🔔</button>
+  </header>
+
+  <main class="m-content">
+
+    <div class="m-summary">
+      <div class="label">Today's packs</div>
+      <div class="total" id="totalPacks">0</div>
+      <div class="stats">
+        <div class="stat"><div class="num" id="kpiQueue">0</div><div class="label-stat">In Queue</div></div>
+        <div class="stat"><div class="num" id="kpiActive">0</div><div class="label-stat">Active</div></div>
+        <div class="stat"><div class="num" id="kpiDone">0</div><div class="label-stat">Done</div></div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom: 12px; font-size: 1rem;">Orders to Pack</h3>
+    <div id="queueList"></div>
+
+    <div style="text-align: center; padding: 20px 0; color: var(--text-muted); font-size: 0.78rem;">
+      💡 Tap an order to start packing. FEFO suggestions appear inside.
+    </div>
+
+  </main>
+
+  <div data-slot="bottom-nav"></div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    const M = window.SheepyMock;
+    const wh = 'wh-kl';
+
+    // Mount bottom nav using shared logic but with mobile-css classes
+    const bnHtml = window.SheepyNav.BOTTOM_NAVS.packing.map((it, i) => `
+      <a href="${it.href}" class="m-bn-item${it.key === 'queue' ? ' active' : ''}">
+        <span class="icon">${it.icon}</span>
+        <span>${it.label}</span>
+      </a>`).join('');
+    document.querySelector('[data-slot="bottom-nav"]').outerHTML = `<nav class="m-bottom-nav">${bnHtml}</nav>`;
+
+    document.getElementById('userName').textContent = M.state.currentUserName || 'Cik Liyana';
+
+    // Queue: orders with status 'new' or 'picking'
+    const queueOrders = M.ordersForWarehouse(wh).filter(o => ['new', 'picking'].includes(o.status));
+    const queueCount = queueOrders.filter(o => o.status === 'new').length;
+    const activeCount = queueOrders.filter(o => o.status === 'picking').length;
+
+    document.getElementById('totalPacks').textContent = queueOrders.length;
+    document.getElementById('kpiQueue').textContent = queueCount;
+    document.getElementById('kpiActive').textContent = activeCount;
+    document.getElementById('kpiDone').textContent = '4'; // demo
+
+    const html = queueOrders.map((o, i) => {
+      const ws = M.getWholesaler(o.wholesalerId);
+      const isActive = o.status === 'picking';
+      const itemsCount = o.items.reduce((s, it) => s + it.qty, 0);
+      const cls = isActive ? 'active' : '';
+      const seqCls = isActive ? '' : '';
+      return `
+        <a href="active.html?id=${o.id}" class="m-card ${cls}" style="text-decoration: none; color: inherit; display: block;">
+          <div class="top">
+            <span class="seq">${i + 1}</span>
+            <span class="ws">${ws.businessName}</span>
+            ${isActive ? '<span class="pill pill-warn" style="margin-left:auto;">Active</span>' : '<span class="pill pill-muted" style="margin-left:auto;">Waiting</span>'}
+          </div>
+          <div style="font-family: monospace; font-size: 0.85rem; color: var(--gray-700); margin-bottom: 4px;">${o.code}</div>
+          <div class="addr">${o.items.length} unique SKUs · ${itemsCount} units total</div>
+          <div class="meta">
+            <span>📅 ${o.placedAt.split(' ')[1] || o.placedAt}</span>
+            <span style="font-weight: 700; color: var(--red);">${M.formatRM(o.total)}</span>
+          </div>
+        </a>`;
+    }).join('') || '<div class="text-muted text-center" style="padding: 40px 20px;"><div style="font-size:2rem;">✓</div>All caught up!</div>';
+    document.getElementById('queueList').innerHTML = html;
+  </script>
+</body>
+</html>

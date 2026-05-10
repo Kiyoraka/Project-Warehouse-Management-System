@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Packing · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <link rel="stylesheet" href="../shared/mobile.css" />
+</head>
+<body class="mobile-shell">
+
+  <header class="m-topbar">
+    <div>
+      <a href="queue.html" style="color: var(--gray-700); text-decoration: none; font-size: 0.85rem;">← Queue</a>
+      <div class="greet" style="margin-top: 2px;">Active Pack</div>
+    </div>
+    <button class="icon-btn">🔔</button>
+  </header>
+
+  <main class="m-content" id="content"></main>
+
+  <div data-slot="bottom-nav"></div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    const M = window.SheepyMock;
+    const wh = 'wh-kl';
+
+    // Mount bottom nav
+    const bnHtml = window.SheepyNav.BOTTOM_NAVS.packing.map(it => `
+      <a href="${it.href}" class="m-bn-item${it.key === 'active' ? ' active' : ''}">
+        <span class="icon">${it.icon}</span>
+        <span>${it.label}</span>
+      </a>`).join('');
+    document.querySelector('[data-slot="bottom-nav"]').outerHTML = `<nav class="m-bottom-nav">${bnHtml}</nav>`;
+
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id') || 'ord-003';
+    const o = M.state.orders.find(x => x.id === id) || M.state.orders[2];
+    const ws = M.getWholesaler(o.wholesalerId);
+
+    const linesHtml = o.items.map((item, idx) => {
+      const batches = M.getBatchesFor(item.variantId, wh);
+      const fefo = batches[0];
+      const fefoBlock = fefo
+        ? `<div class="fefo-suggest">
+             <span class="fefo-badge">FEFO</span>
+             <strong>${fefo.batchNo}</strong> · expires ${fefo.expiryDate} · ${fefo.qtyRemaining} left
+           </div>`
+        : `<div class="text-muted fs-sm">No active batches</div>`;
+      return `
+        <div class="pick-line">
+          <div class="top">
+            <div class="name">${item.name}</div>
+            <div class="qty-needed">×${item.qty}</div>
+          </div>
+          ${fefoBlock}
+          <div class="check-row">
+            <input type="checkbox" id="chk-${idx}" />
+            <label for="chk-${idx}" style="font-weight: 600; cursor: pointer; flex: 1;">Picked + verified</label>
+          </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('content').innerHTML = `
+      <div class="m-detail">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div>
+            <div style="font-family: monospace; font-weight: 700; font-size: 0.9rem;">${o.code}</div>
+            <div class="text-muted fs-sm">Placed ${o.placedAt}</div>
+          </div>
+          <span class="pill pill-warn">Picking</span>
+        </div>
+
+        <div class="m-field">
+          <div class="label">Wholesaler</div>
+          <div class="value">${ws.businessName}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">📞 ${ws.contact} · ${o.fulfillmentMethod === 'pickup' ? '🏪 Self-Pickup' : '🚚 Delivery'}</div>
+        </div>
+
+        <div class="m-field">
+          <div class="label">Order Total</div>
+          <div class="value" style="color: var(--red);">${M.formatRM(o.total)} · ${o.items.length} unique SKU(s)</div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin: 16px 0 8px;">Items to Pack (FEFO)</h4>
+        ${linesHtml}
+
+        <div class="m-temp">
+          <span style="font-size:1.2rem;">❄️</span>
+          <div>Storage temp: <strong>-18°C</strong> · Maintain cold-chain throughout pack</div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin: 16px 0 8px;">Pack Confirmation</h4>
+        <div class="m-photo">
+          <div class="icon">📷</div>
+          <div style="font-weight: 600;">Tap to take packed-box photo</div>
+          <div class="form-hint">Optional · for QA traceability</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Notes (optional)</label>
+          <textarea class="form-textarea" placeholder="e.g. used backup batch — primary FEFO out of stock"></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-block btn-lg" style="margin-top: 12px;" onclick="markPacked('${o.fulfillmentMethod}')">
+          ✓ Confirm Packed → ${o.fulfillmentMethod === 'pickup' ? 'Hold for Pickup' : 'Send to Driver'}
+        </button>
+      </div>
+    `;
+
+    function markPacked(ful) {
+      alert(ful === 'pickup' ? 'Marked ready for pickup ✓' : 'Sent to driver queue ✓');
+      setTimeout(() => location.href = 'queue.html', 600);
+    }
+    window.markPacked = markPacked;
+  </script>
+</body>
+</html>

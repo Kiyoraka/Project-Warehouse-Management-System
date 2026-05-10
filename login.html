@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="shared/styles.css" />
+  <link rel="stylesheet" href="shared/glass.css" />
+  <style>
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 40px 20px;
+      background:
+        radial-gradient(ellipse at top right, rgba(224, 36, 36, 0.18), transparent 55%),
+        radial-gradient(ellipse at bottom left, rgba(224, 36, 36, 0.12), transparent 50%),
+        radial-gradient(ellipse at center, rgba(255, 255, 255, 1), rgba(253, 253, 253, 1));
+    }
+
+    .login-shell {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .login-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      cursor: pointer;
+    }
+    .login-brand .logo {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      display: grid; place-items: center;
+      font-weight: 800;
+      font-size: 1.3rem;
+      box-shadow: 0 6px 16px var(--red-glow);
+    }
+    .login-brand .name {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .login-card {
+      padding: 40px 36px;
+    }
+    .login-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .login-header h1 {
+      font-size: 1.5rem;
+      margin-bottom: 6px;
+    }
+    .login-header p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .login-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .login-divider::before,
+    .login-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .demo-callout {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: var(--red-soft);
+      border: 1px dashed rgba(224, 36, 36, 0.35);
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      color: var(--red-deep);
+      text-align: center;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+    .login-footer a {
+      font-weight: 600;
+    }
+
+    .role-buttons {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 540px) { .role-buttons { grid-template-columns: 1fr 1fr; } }
+    .role-btn {
+      padding: 12px 6px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--white);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--gray-700);
+      text-align: center;
+    }
+    .role-btn:hover {
+      border-color: var(--red);
+      color: var(--red);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px var(--red-glow);
+    }
+    .role-btn .icon {
+      font-size: 1.5rem;
+    }
+    .role-btn .mobile-tag {
+      display: inline-block;
+      font-size: 0.6rem;
+      background: var(--red-soft);
+      color: var(--red-deep);
+      padding: 1px 6px;
+      border-radius: 999px;
+      margin-top: 2px;
+      letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 480px) {
+      .login-card { padding: 28px 24px; }
+      .role-buttons { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-shell">
+
+    <a href="index.html" style="text-decoration: none; color: inherit;">
+      <div class="login-brand">
+        <div class="logo">S</div>
+        <div class="name">Sheepy Farm</div>
+      </div>
+    </a>
+
+    <div class="login-card glass-strong">
+      <div class="login-header">
+        <h1>Welcome back</h1>
+        <p>Sign in to your wholesaler or staff account</p>
+      </div>
+
+      <form onsubmit="event.preventDefault(); signIn();">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input type="email" id="email" class="form-input" placeholder="you@example.com" value="adlin@sheepyfarm.my" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input type="password" id="password" class="form-input" placeholder="••••••••" value="demo1234" />
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 0.85rem;">
+          <label style="display: flex; align-items: center; gap: 6px; color: var(--gray-700);">
+            <input type="checkbox" /> Remember me
+          </label>
+          <a href="#">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block">Sign In →</button>
+      </form>
+
+      <div class="login-divider">Demo · choose a role</div>
+
+      <div class="role-buttons">
+        <button class="role-btn" onclick="demoLogin('admin')">
+          <span class="icon">🛡️</span>
+          <span>Admin HQ</span>
+        </button>
+        <button class="role-btn" onclick="demoLogin('warehouse')">
+          <span class="icon">🏭</span>
+          <span>Warehouse</span>
+        </button>
+        <button class="role-btn" onclick="demoLogin('packing')">
+          <span class="icon">📦</span>
+          <span>Packing</span>
+          <span class="mobile-tag">MOBILE</span>
+        </button>
+        <button class="role-btn" onclick="demoLogin('driver')">
+          <span class="icon">🚚</span>
+          <span>Driver</span>
+          <span class="mobile-tag">MOBILE</span>
+        </button>
+        <button class="role-btn" onclick="demoLogin('wholesaler')">
+          <span class="icon">🛒</span>
+          <span>Wholesaler</span>
+        </button>
+      </div>
+
+      <div class="demo-callout">
+        💡 This is a demo prototype. Click any role above to jump straight into that dashboard with mock data.
+      </div>
+    </div>
+
+    <div class="login-footer">
+      Don't have an account? <a href="#">Apply to become a wholesaler →</a>
+    </div>
+
+  </div>
+
+  <script src="shared/mock-data.js"></script>
+  <script>
+    function demoLogin(role) {
+      const userByRole = {
+        admin:      { name: 'Tuan Adlin',      route: 'admin/dashboard.html' },
+        warehouse:  { name: 'Manager Aiman',   route: 'warehouse/home.html' },
+        packing:    { name: 'Cik Liyana',      route: 'packing/queue.html' },
+        driver:     { name: 'Encik Faizal',    route: 'driver/routes.html' },
+        wholesaler: { name: 'Mat Frozen Mart', route: 'wholesaler/catalog.html' },
+      };
+      const u = userByRole[role];
+      window.SheepyMock.setRole(role, u.name);
+      window.location.href = u.route;
+    }
+
+    function signIn() {
+      // Demo: route based on email pattern
+      const email = document.getElementById('email').value.toLowerCase();
+      if (email.includes('sheepyfarm.my'))   demoLogin('admin');
+      else if (email.includes('warehouse'))  demoLogin('warehouse');
+      else                                   demoLogin('wholesaler');
+    }
+  </script>
+
+</body>
+</html>

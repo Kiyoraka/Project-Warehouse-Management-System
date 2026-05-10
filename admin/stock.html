@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock · Admin · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .stock-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stock-cell {
+      text-align: center;
+      padding: 12px 8px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+    .stock-ok    { background: rgba(16, 185, 129, 0.10); color: #047857; }
+    .stock-warn  { background: rgba(245, 158, 11, 0.12); color: #b45309; }
+    .stock-low   { background: var(--red-soft); color: var(--red-deep); }
+    .stock-empty { background: var(--gray-100); color: var(--gray-500); }
+
+    .stock-cell .qty { font-size: 1.05rem; }
+    .stock-cell .reserved { font-size: 0.7rem; opacity: 0.75; font-weight: 500; margin-top: 2px; }
+
+    .matrix-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    .matrix-table th { text-align: center; }
+    .matrix-table th:first-child { text-align: left; min-width: 240px; }
+    .matrix-table tbody td { text-align: center; padding: 12px 16px; border-bottom: 1px solid var(--gray-100); }
+    .matrix-table tbody td:first-child { text-align: left; }
+
+    .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; }
+    .legend-swatch { width: 16px; height: 16px; border-radius: 4px; }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Stock</h1>
+        <div class="subtitle">Per-warehouse stock matrix · color-coded against reorder thresholds</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary"><span>📤</span> Export Stock Report</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.openModal('receiveStockModal')"><span>📦</span> Receive Stock</button>
+      </div>
+    </div>
+
+    <!-- Summary KPIs -->
+    <div class="stock-summary">
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Total SKUs Tracked</div>
+        <div class="value" id="totalSkus">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Total Units in Stock</div>
+        <div class="value" id="totalUnits">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Low-Stock Alerts</div>
+        <div class="value" id="lowStockCount" style="color: var(--red);">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Active Batches</div>
+        <div class="value" id="activeBatches">—</div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="glass-subtle legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:rgba(16,185,129,0.2);"></div> Healthy stock (above 2× threshold)</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:rgba(245,158,11,0.25);"></div> Approaching reorder (within threshold)</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--red-soft);"></div> Below reorder threshold</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--gray-100);"></div> No stock at this warehouse</div>
+    </div>
+
+    <!-- Matrix -->
+    <div class="glass-strong" style="overflow-x: auto; margin-top: 20px; padding: 16px;">
+      <table class="matrix-table">
+        <thead>
+          <tr>
+            <th>SKU / Variant</th>
+            <th id="warehouseHeaders"></th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ============ RECEIVE STOCK MODAL ============ -->
+  <div class="modal-backdrop" id="receiveStockModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Receive Stock</h3>
+        <button class="modal-close" onclick="window.SheepyNav.closeModal('receiveStockModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Product Variant *</label>
+            <select class="form-select" id="receiveVariant"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Warehouse *</label>
+            <select class="form-select" id="receiveWarehouse"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Batch Number *</label>
+            <input class="form-input" placeholder="B-2026-0505" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Supplier *</label>
+            <select class="form-select" id="receiveSupplier"></select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Manufactured Date *</label>
+            <input class="form-input" type="date" value="2026-05-05" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expiry Date *</label>
+            <input class="form-input" type="date" value="2027-05-05" />
+            <div class="form-hint">Auto-calculated from product shelf life</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Quantity Received *</label>
+            <input class="form-input" type="number" placeholder="100" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Received By</label>
+            <input class="form-input" value="Manager Aiman" disabled />
+          </div>
+        </div>
+        <div class="glass-red glass-card-sm" style="padding: 12px; font-size: 0.85rem;">
+          ✓ Halal cert from supplier auto-attached to this batch for traceability
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="window.SheepyNav.closeModal('receiveStockModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.closeModal('receiveStockModal')">Confirm Receive →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('admin', 'stock', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const products = M.state.products;
+    const warehouses = M.state.warehouses;
+
+    // Headers
+    const whHeader = warehouses.map(w => `<th>${w.name}<br><span style="font-size:0.7rem; color:var(--text-muted);">${w.code}</span></th>`).join('');
+    document.getElementById('warehouseHeaders').outerHTML = whHeader;
+
+    // Body — flatten all variants
+    const rows = [];
+    products.forEach(p => {
+      p.variants.forEach(v => {
+        const cells = warehouses.map(w => {
+          const stock = M.getStockFor(v.id, w.id);
+          if (!stock) return `<td><div class="stock-cell stock-empty"><div class="qty">—</div><div class="reserved">no stock</div></div></td>`;
+          let cls = 'stock-ok';
+          if (stock.available <= stock.reorderThreshold)             cls = 'stock-low';
+          else if (stock.available <= stock.reorderThreshold * 1.5)  cls = 'stock-warn';
+          return `<td><div class="stock-cell ${cls}">
+            <div class="qty">${stock.available}</div>
+            <div class="reserved">+${stock.reserved} reserved · @ ${stock.reorderThreshold}</div>
+          </div></td>`;
+        }).join('');
+        rows.push(`
+          <tr>
+            <td>
+              <div style="font-weight:600; font-size:0.92rem;">${p.name}</div>
+              <div style="font-size:0.78rem; color:var(--text-muted);">${v.sku} · ${v.size}</div>
+            </td>
+            ${cells}
+          </tr>`);
+      });
+    });
+    document.getElementById('matrixBody').innerHTML = rows.join('');
+
+    // Summary
+    const totalSkus = products.reduce((s, p) => s + p.variants.length, 0);
+    const totalUnits = M.state.stock.reduce((s, x) => s + x.available, 0);
+    const lowStock = M.lowStockItems().length;
+    const activeBatches = M.state.batches.filter(b => b.qtyRemaining > 0).length;
+    document.getElementById('totalSkus').textContent = totalSkus;
+    document.getElementById('totalUnits').textContent = totalUnits.toLocaleString();
+    document.getElementById('lowStockCount').textContent = lowStock;
+    document.getElementById('activeBatches').textContent = activeBatches;
+
+    // Receive modal selects
+    const variantOptions = [];
+    products.forEach(p => p.variants.forEach(v => variantOptions.push(`<option value="${v.id}">${p.name} · ${v.size} (${v.sku})</option>`)));
+    document.getElementById('receiveVariant').innerHTML = variantOptions.join('');
+    document.getElementById('receiveWarehouse').innerHTML = warehouses.map(w => `<option value="${w.id}">${w.name}</option>`).join('');
+    document.getElementById('receiveSupplier').innerHTML = M.state.suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  </script>
+</body>
+</html>

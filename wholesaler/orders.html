@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Orders · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .filter-tabs { display: flex; gap: 6px; padding: 6px; margin-bottom: 20px; width: fit-content; }
+    .filter-tabs .tab {
+      padding: 8px 16px; border-radius: var(--radius-sm);
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      color: var(--gray-700);
+    }
+    .filter-tabs .tab:hover { background: var(--white-soft); }
+    .filter-tabs .tab.active { background: linear-gradient(135deg, var(--red), var(--red-deep)); color: var(--white); }
+
+    .order-card {
+      padding: 20px;
+      margin-bottom: 14px;
+    }
+    .order-card .top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .order-card .code { font-family: monospace; font-weight: 700; font-size: 1rem; }
+    .order-card .meta { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+    .order-card .actions { display: flex; gap: 8px; }
+
+    /* Timeline */
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+      padding: 16px 0;
+      border-top: 1px solid var(--gray-100);
+      border-bottom: 1px solid var(--gray-100);
+      position: relative;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 36px; left: 12.5%; right: 12.5%;
+      height: 2px;
+      background: var(--gray-200);
+      z-index: 0;
+    }
+    .stage {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+    .stage .dot {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: grid; place-items: center;
+      margin: 0 auto;
+      background: var(--white);
+      border: 2px solid var(--gray-300);
+      color: var(--gray-500);
+      font-weight: 700;
+    }
+    .stage.done .dot {
+      background: linear-gradient(135deg, #10b981, #047857);
+      border-color: #10b981;
+      color: var(--white);
+    }
+    .stage.active .dot {
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      border-color: var(--red);
+      color: var(--white);
+      box-shadow: 0 0 0 4px var(--red-soft);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 4px var(--red-soft); }
+      50% { box-shadow: 0 0 0 8px transparent; }
+    }
+    .stage .label { font-size: 0.78rem; font-weight: 600; margin-top: 6px; }
+    .stage .ts { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
+    .item-list {
+      font-size: 0.88rem;
+      color: var(--gray-700);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .item-list .item { padding: 4px 10px; background: var(--white-soft); border-radius: 6px; }
+
+    .order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 14px;
+    }
+    .order-footer .total { font-weight: 800; font-size: 1.15rem; color: var(--red); }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>My Orders</h1>
+        <div class="subtitle">Track delivery · download invoices · reorder favorites</div>
+      </div>
+      <div class="page-header-actions">
+        <a href="catalog.html" class="btn btn-primary"><span>＋</span> New Order</a>
+      </div>
+    </div>
+
+    <div class="filter-tabs glass-strong">
+      <div class="tab active" onclick="filterOrders('all')">All</div>
+      <div class="tab" onclick="filterOrders('pending')">Pending</div>
+      <div class="tab" onclick="filterOrders('inprogress')">In Progress</div>
+      <div class="tab" onclick="filterOrders('delivered')">Delivered</div>
+      <div class="tab" onclick="filterOrders('cancelled')">Cancelled</div>
+    </div>
+
+    <div id="ordersList"></div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('wholesaler', 'orders', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const wsId = M.state.currentWholesalerId;
+    const allOrders = M.ordersForWholesaler(wsId);
+    const STAGES = ['Placed', 'Picked', 'Out for Delivery', 'Delivered'];
+
+    function renderOrders(filter) {
+      let orders = allOrders;
+      if (filter === 'pending')     orders = orders.filter(o => o.status === 'new');
+      if (filter === 'inprogress')  orders = orders.filter(o => ['picking','out_for_delivery'].includes(o.status));
+      if (filter === 'delivered')   orders = orders.filter(o => o.status === 'delivered');
+      if (filter === 'cancelled')   orders = [];
+
+      if (orders.length === 0) {
+        document.getElementById('ordersList').innerHTML = '<div class="text-muted text-center" style="padding: 60px;">No orders in this state</div>';
+        return;
+      }
+
+      const html = orders.map(o => {
+        const wh = M.getWarehouse(o.warehouseId);
+        const stCls = {
+          new: 'pill-muted', picking: 'pill-warn',
+          out_for_delivery: 'pill-info', delivered: 'pill-active',
+        }[o.status] || 'pill-muted';
+
+        const statusIdx = { new: 0, picking: 1, out_for_delivery: 2, delivered: 3 }[o.status] ?? 0;
+
+        const stagesHtml = STAGES.map((s, i) => {
+          let cls = '';
+          let tsHtml = '';
+          if (i < statusIdx) {
+            cls = 'done';
+            const tl = o.timeline.find(t => t.stage === s);
+            tsHtml = tl ? `<div class="ts">${tl.ts.split(' ')[1] || ''}</div>` : '';
+          } else if (i === statusIdx) {
+            cls = 'active';
+            tsHtml = '<div class="ts" style="color:var(--red); font-weight:700;">in progress</div>';
+          }
+          return `<div class="stage ${cls}">
+            <div class="dot">${i < statusIdx ? '✓' : (i + 1)}</div>
+            <div class="label">${s}</div>
+            ${tsHtml}
+          </div>`;
+        }).join('');
+
+        const items = o.items.map(i => `<span class="item">${i.qty}× ${i.name}</span>`).join('');
+
+        return `
+          <div class="order-card glass-strong">
+            <div class="top">
+              <div>
+                <div class="code">${o.code}</div>
+                <div class="meta">From ${wh.name} · placed ${o.placedAt}</div>
+              </div>
+              <span class="pill ${stCls}">${o.status.replace(/_/g, ' ')}</span>
+            </div>
+
+            <div class="timeline">${stagesHtml}</div>
+
+            <div class="item-list">${items}</div>
+
+            <div class="order-footer">
+              <div class="total">${M.formatRM(o.total)}</div>
+              <div class="actions">
+                <a href="invoice.html?id=${o.id}" class="btn btn-ghost btn-sm">📄 Invoice</a>
+                <button class="btn btn-secondary btn-sm">↻ Reorder</button>
+                ${o.status === 'delivered' ? '<button class="btn btn-ghost btn-sm">⭐ Rate</button>' : '<button class="btn btn-ghost btn-sm">Track →</button>'}
+              </div>
+            </div>
+          </div>`;
+      }).join('');
+
+      document.getElementById('ordersList').innerHTML = html;
+    }
+
+    function filterOrders(f) {
+      document.querySelectorAll('.filter-tabs .tab').forEach(t => t.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      renderOrders(f);
+    }
+    window.filterOrders = filterOrders;
+    renderOrders('all');
+  </script>
+</body>
+</html>

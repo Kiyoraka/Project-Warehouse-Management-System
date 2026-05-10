@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cart · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .cart-layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
+    .cart-card { padding: 28px; }
+    .cart-line {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto auto;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .cart-line:last-child { border-bottom: none; }
+    .cart-line .img-cell {
+      width: 60px; height: 60px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--white-soft), var(--gray-100));
+      display: grid; place-items: center;
+      font-size: 1.8rem;
+    }
+    .cart-line .info .name { font-weight: 600; }
+    .cart-line .info .meta { font-size: 0.78rem; color: var(--text-muted); }
+    .cart-line .qty-stepper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--white-soft);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+    }
+    .cart-line .qty-stepper button {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      background: transparent;
+      font-weight: 700;
+    }
+    .cart-line .qty-stepper button:hover { background: var(--white); }
+    .cart-line .qty-stepper input {
+      width: 48px;
+      border: none;
+      background: transparent;
+      text-align: center;
+      font-weight: 700;
+    }
+    .cart-line .total { font-weight: 700; min-width: 90px; text-align: right; }
+    .cart-line .remove {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      color: var(--text-muted);
+    }
+    .cart-line .remove:hover { background: var(--red-soft); color: var(--red); }
+
+    .summary-card { padding: 24px; position: sticky; top: 80px; }
+    .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.92rem; }
+    .summary-row.total { padding-top: 16px; margin-top: 12px; border-top: 1px solid var(--border); font-size: 1.1rem; font-weight: 800; }
+    .summary-row.total .value { color: var(--red); }
+
+    .option-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .opt-card {
+      padding: 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .opt-card:hover { border-color: var(--gray-300); }
+    .opt-card.active { border-color: var(--red); background: var(--red-soft); }
+    .opt-card .icon { font-size: 1.6rem; margin-bottom: 4px; }
+    .opt-card .name { font-weight: 700; font-size: 0.9rem; }
+    .opt-card .desc { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; }
+
+    @media (max-width: 1024px) { .cart-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Your Cart</h1>
+        <div class="subtitle">Review items · pick fulfillment · pay securely</div>
+      </div>
+    </div>
+
+    <div class="cart-layout">
+
+      <div>
+        <div class="cart-card glass-strong">
+          <h3 style="margin-bottom: 16px;">Cart Items (<span id="cartCount">3</span>)</h3>
+          <div id="cartLines"></div>
+          <a href="catalog.html" class="btn btn-ghost btn-sm" style="margin-top: 16px;">← Continue shopping</a>
+        </div>
+
+        <div class="cart-card glass-strong" style="margin-top: 16px;">
+          <h3 style="margin-bottom: 16px;">Fulfillment</h3>
+          <div class="option-row">
+            <div class="opt-card active" onclick="selOpt(this, '.option-row')">
+              <div class="icon">🚚</div>
+              <div class="name">Delivery</div>
+              <div class="desc">In-house cold-chain rider · same-day in-zone</div>
+            </div>
+            <div class="opt-card" onclick="selOpt(this, '.option-row')">
+              <div class="icon">📦</div>
+              <div class="name">Self-Pickup</div>
+              <div class="desc">Collect at Klang Valley warehouse</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; padding: 14px; background: var(--white-soft); border-radius: var(--radius-sm);">
+            <div class="text-muted fs-sm">Delivery to:</div>
+            <div style="font-weight: 600; margin-top: 4px;">Mat Frozen Mart · 12 Jalan Bangsar, KL</div>
+            <button class="btn btn-ghost btn-sm" style="margin-top: 8px;">Change address →</button>
+          </div>
+        </div>
+
+        <div class="cart-card glass-strong" style="margin-top: 16px;">
+          <h3 style="margin-bottom: 16px;">Payment Method</h3>
+          <div class="option-row" id="paymentOpts">
+            <div class="opt-card active" onclick="selOpt(this, '#paymentOpts')">
+              <div class="icon">💳</div>
+              <div class="name">ToyyibPay</div>
+              <div class="desc">FPX, online banking, e-wallet</div>
+            </div>
+            <div class="opt-card" onclick="selOpt(this, '#paymentOpts')">
+              <div class="icon">⚡</div>
+              <div class="name">ChipIn</div>
+              <div class="desc">Cards, GrabPay, Boost, FPX</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="summary-card glass-strong">
+          <h3 style="margin-bottom: 16px;">Order Summary</h3>
+          <div class="summary-row"><span>Subtotal</span><span id="subtotal">RM —</span></div>
+          <div class="summary-row"><span>SST 6%</span><span id="sst">RM —</span></div>
+          <div class="summary-row"><span>Delivery fee</span><span style="color: var(--status-active); font-weight: 600;">FREE</span></div>
+          <div class="summary-row total"><span>Total</span><span class="value" id="grandTotal">RM —</span></div>
+
+          <button class="btn btn-primary btn-lg btn-block" style="margin-top: 20px;" onclick="placeOrder()">Place Order →</button>
+
+          <div class="halal-badge" style="margin-top: 14px; justify-content: center; width: 100%;">
+            <span class="ring">✓</span>
+            <span>All items JAKIM Halal certified</span>
+          </div>
+
+          <div style="margin-top: 16px; padding: 12px; background: rgba(254, 226, 226, 0.3); border-radius: var(--radius-sm); font-size: 0.82rem; color: var(--gray-700);">
+            💡 Need a custom quantity not in the catalog? <a href="quote-request.html" style="font-weight: 700;">Submit a custom quote →</a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('wholesaler', 'cart', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const SST_RATE = 0.06;
+
+    function render() {
+      const lines = M.state.cart;
+      document.getElementById('cartCount').textContent = lines.length;
+      if (lines.length === 0) {
+        document.getElementById('cartLines').innerHTML = '<div class="text-muted text-center" style="padding: 40px;">Cart is empty · <a href="catalog.html" style="font-weight:700;">Browse catalog →</a></div>';
+        recalc();
+        return;
+      }
+      const html = lines.map((l, idx) => `
+        <div class="cart-line">
+          <div class="img-cell">${(M.getVariant(l.variantId)?.product?.image) || '📦'}</div>
+          <div class="info">
+            <div class="name">${l.name}</div>
+            <div class="meta">${M.formatRM(l.unitPrice)} per unit</div>
+          </div>
+          <div class="qty-stepper">
+            <button onclick="changeQty(${idx}, -1)">−</button>
+            <input type="number" value="${l.qty}" onchange="setQty(${idx}, this.value)" />
+            <button onclick="changeQty(${idx}, 1)">＋</button>
+          </div>
+          <div class="total">${M.formatRM(l.qty * l.unitPrice)}</div>
+          <button class="remove" onclick="removeLine(${idx})">🗑️</button>
+        </div>`).join('');
+      document.getElementById('cartLines').innerHTML = html;
+      recalc();
+    }
+    function recalc() {
+      const subtotal = M.cartTotal();
+      const sst = subtotal * SST_RATE;
+      const total = subtotal + sst;
+      document.getElementById('subtotal').textContent  = M.formatRM(subtotal);
+      document.getElementById('sst').textContent       = M.formatRM(sst);
+      document.getElementById('grandTotal').textContent = M.formatRM(total);
+    }
+    function changeQty(idx, delta) {
+      M.state.cart[idx].qty = Math.max(1, M.state.cart[idx].qty + delta);
+      M.save(); render();
+    }
+    function setQty(idx, val) {
+      M.state.cart[idx].qty = Math.max(1, parseInt(val, 10) || 1);
+      M.save(); render();
+    }
+    function removeLine(idx) {
+      M.state.cart.splice(idx, 1);
+      M.save(); render();
+    }
+    function selOpt(el, scope) {
+      el.parentElement.querySelectorAll('.opt-card').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+    }
+    function placeOrder() {
+      alert('Order placed ✓ Redirecting to payment gateway...');
+      setTimeout(() => location.href = 'orders.html', 600);
+    }
+    window.changeQty = changeQty; window.setQty = setQty; window.removeLine = removeLine;
+    window.selOpt = selOpt; window.placeOrder = placeOrder;
+    render();
+  </script>
+</body>
+</html>

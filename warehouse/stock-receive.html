@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stock In · Warehouse · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .receive-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-card { padding: 28px; }
+    .receive-summary {
+      padding: 24px;
+      background: rgba(254, 226, 226, 0.25);
+      border: 1px solid rgba(224, 36, 36, 0.2);
+      border-radius: var(--radius-md);
+      margin-top: 20px;
+    }
+    .receive-summary h4 { margin-bottom: 12px; font-size: 0.95rem; }
+    .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.88rem; }
+    .summary-row .label { color: var(--text-muted); }
+    .summary-row .value { font-weight: 600; }
+    .summary-row.total { border-top: 1px solid rgba(224, 36, 36, 0.2); margin-top: 8px; padding-top: 12px; }
+    .summary-row.total .value { color: var(--red-deep); font-size: 1.05rem; }
+
+    .recent-list { padding: 24px; max-height: 600px; overflow-y: auto; }
+    .recent-item {
+      padding: 14px;
+      background: var(--white-soft);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      border-left: 3px solid var(--red);
+    }
+    .recent-item .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .recent-item .batch { font-family: monospace; font-weight: 700; font-size: 0.88rem; }
+    .recent-item .name { font-weight: 600; font-size: 0.95rem; }
+    .recent-item .meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .recent-item .qty {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--red-deep);
+    }
+
+    @media (max-width: 1024px) { .receive-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Stock In · Receive</h1>
+        <div class="subtitle">Log incoming stock from suppliers · creates a batch entry for FEFO tracking</div>
+      </div>
+    </div>
+
+    <div class="receive-grid">
+
+      <!-- ============ FORM ============ -->
+      <div class="form-card glass-strong">
+        <h3 style="margin-bottom: 20px;">Receive Stock Batch</h3>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Product Variant *</label>
+            <select class="form-select" id="receiveVariant" onchange="recalcExpiry()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Warehouse</label>
+            <input class="form-input" value="Klang Valley" disabled />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Batch Number *</label>
+            <input class="form-input" id="batchNo" value="B-2026-0505" />
+            <div class="form-hint">Auto-generated from today's date</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Quantity Received *</label>
+            <input class="form-input" type="number" id="qty" placeholder="100" oninput="recalcSummary()" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Manufactured Date *</label>
+            <input class="form-input" type="date" id="mfdDate" value="2026-05-05" onchange="recalcExpiry()" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Expiry Date *</label>
+            <input class="form-input" type="date" id="expiryDate" value="2027-05-05" />
+            <div class="form-hint" id="shelfLifeHint">Auto-calculated from product shelf life</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Supplier *</label>
+            <select class="form-select" id="supplierSel" onchange="updateSupplierInfo()"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Received By</label>
+            <input class="form-input" value="Manager Aiman" disabled />
+          </div>
+        </div>
+
+        <div class="glass-red glass-card-sm" style="padding: 12px; font-size: 0.85rem; display: flex; gap: 10px; align-items: center; margin-top: 12px;" id="halalInfo">
+          <span style="font-size:1.4rem;">✓</span>
+          <div>
+            <strong>Halal cert valid</strong> · Cert <span id="supCertNo">JAKIM-2024-0142</span> · Valid until <span id="supCertValid">2027-08-15</span>
+          </div>
+        </div>
+
+        <div class="receive-summary">
+          <h4>📦 Batch Summary</h4>
+          <div class="summary-row"><span class="label">Product</span><span class="value" id="sumProduct">—</span></div>
+          <div class="summary-row"><span class="label">Quantity</span><span class="value" id="sumQty">—</span></div>
+          <div class="summary-row"><span class="label">Mfd Date</span><span class="value" id="sumMfd">—</span></div>
+          <div class="summary-row"><span class="label">Expiry Date</span><span class="value" id="sumExp">—</span></div>
+          <div class="summary-row"><span class="label">Days Valid</span><span class="value" id="sumDays">—</span></div>
+          <div class="summary-row total"><span>FEFO Position</span><span class="value" id="sumFefo">—</span></div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button class="btn btn-ghost btn-block">Cancel</button>
+          <button class="btn btn-primary btn-block" onclick="alert('Batch recorded ✓')">Confirm & Record Batch →</button>
+        </div>
+      </div>
+
+      <!-- ============ RECENT RECEIVINGS ============ -->
+      <div class="recent-list glass-strong">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3>Recent Receivings</h3>
+          <span class="chip">Last 10</span>
+        </div>
+        <div id="recentList"></div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('warehouse', 'stock-receive', { showSearch: false });
+
+    const M = window.SheepyMock;
+
+    // Variants
+    const variantOptions = [];
+    M.state.products.forEach(p => p.variants.forEach(v => {
+      variantOptions.push({ id: v.id, label: `${p.name} · ${v.size} (${v.sku})`, shelfLife: p.shelfLifeDays, productName: p.name, size: v.size });
+    }));
+    document.getElementById('receiveVariant').innerHTML = variantOptions.map(v => `<option value="${v.id}" data-shelf="${v.shelfLife}" data-name="${v.productName + ' ' + v.size}">${v.label}</option>`).join('');
+
+    // Suppliers
+    document.getElementById('supplierSel').innerHTML = M.state.suppliers.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+
+    function recalcExpiry() {
+      const opt = document.getElementById('receiveVariant').selectedOptions[0];
+      const shelf = parseInt(opt.dataset.shelf || '365', 10);
+      const mfd = new Date(document.getElementById('mfdDate').value);
+      const expiry = new Date(mfd);
+      expiry.setDate(expiry.getDate() + shelf);
+      document.getElementById('expiryDate').value = expiry.toISOString().slice(0, 10);
+      document.getElementById('shelfLifeHint').textContent = `Auto-calculated from ${shelf}-day shelf life`;
+      recalcSummary();
+    }
+    function recalcSummary() {
+      const opt = document.getElementById('receiveVariant').selectedOptions[0];
+      const qty = document.getElementById('qty').value || 0;
+      const mfd = document.getElementById('mfdDate').value;
+      const exp = document.getElementById('expiryDate').value;
+      const days = exp && mfd ? Math.round((new Date(exp) - new Date(mfd)) / 86400000) : '—';
+      document.getElementById('sumProduct').textContent = opt.dataset.name;
+      document.getElementById('sumQty').textContent = qty + ' units';
+      document.getElementById('sumMfd').textContent = mfd;
+      document.getElementById('sumExp').textContent = exp;
+      document.getElementById('sumDays').textContent = days + ' days';
+      // FEFO position — count active batches with later expiry
+      const variantId = opt.value;
+      const existing = M.getBatchesFor(variantId, 'wh-kl').length;
+      document.getElementById('sumFefo').textContent = `Last in queue (#${existing + 1})`;
+    }
+    function updateSupplierInfo() {
+      const id = document.getElementById('supplierSel').value;
+      const sup = M.getSupplier(id);
+      if (sup) {
+        document.getElementById('supCertNo').textContent = sup.halalCertNo;
+        document.getElementById('supCertValid').textContent = sup.halalCertValidUntil;
+      }
+    }
+    window.recalcExpiry = recalcExpiry;
+    window.recalcSummary = recalcSummary;
+    window.updateSupplierInfo = updateSupplierInfo;
+    recalcExpiry();
+    updateSupplierInfo();
+
+    // Recent receivings list
+    const recent = M.state.batches.slice().sort((a,b) => b.receivedAt.localeCompare(a.receivedAt));
+    const html = recent.map(b => {
+      const v = M.getVariant(b.variantId);
+      const sup = M.getSupplier(b.supplierId);
+      return `
+        <div class="recent-item">
+          <div class="header">
+            <span class="batch">${b.batchNo}</span>
+            <span class="qty">+${b.qtyReceived}</span>
+          </div>
+          <div class="name">${v.product.name} · ${v.size}</div>
+          <div class="meta">
+            <span>📅 Received ${b.receivedAt}</span>
+            <span>⏱ Expires ${b.expiryDate}</span>
+            <span>🏭 ${sup.name}</span>
+          </div>
+        </div>`;
+    }).join('');
+    document.getElementById('recentList').innerHTML = html;
+  </script>
+</body>
+</html>

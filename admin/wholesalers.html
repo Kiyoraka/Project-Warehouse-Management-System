@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wholesalers · Admin · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .ws-row { display: flex; align-items: center; gap: 12px; }
+    .ws-avatar {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--red-soft), rgba(254, 226, 226, 0.4));
+      display: grid; place-items: center;
+      color: var(--red-deep);
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .ws-row .info { min-width: 0; }
+    .ws-row .info .name { font-weight: 600; }
+    .ws-row .info .ssm { font-size: 0.78rem; color: var(--text-muted); font-family: monospace; }
+
+    .suggest-card {
+      background: rgba(254, 226, 226, 0.3);
+      border: 1px solid rgba(224, 36, 36, 0.2);
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      margin-top: 6px;
+      display: none;
+    }
+    .suggest-card.shown { display: block; }
+    .suggest-card .nearest {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .suggest-card .nearest strong { color: var(--red-deep); }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Wholesalers</h1>
+        <div class="subtitle">B2B buyer accounts · admin-created · region-locked at signup</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary"><span>📤</span> Export</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.openModal('addWholesalerModal')"><span>＋</span> Create Wholesaler</button>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Active Wholesalers</div>
+        <div class="value" id="activeCount">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Pending Approval</div>
+        <div class="value" id="pendingCount" style="color: var(--status-warn);">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Top Region</div>
+        <div class="value" id="topRegion">—</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Avg Orders / Account</div>
+        <div class="value">3.4</div>
+      </div>
+    </div>
+
+    <div class="glass-strong" style="overflow: hidden;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Contact</th>
+            <th>Assigned Warehouse</th>
+            <th>Joined</th>
+            <th>Status</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="wholesalersBody"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ============ CREATE WHOLESALER MODAL ============ -->
+  <div class="modal-backdrop" id="addWholesalerModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Create Wholesaler Account</h3>
+        <button class="modal-close" onclick="window.SheepyNav.closeModal('addWholesalerModal')">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4 style="font-size: 0.95rem; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Business Info</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Business Name *</label>
+            <input class="form-input" placeholder="e.g. Mat Frozen Mart Sdn Bhd" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">SSM No. *</label>
+            <input class="form-input" placeholder="202301-001234" />
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin: 20px 0 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Account Login</h4>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Email *</label>
+            <input class="form-input" type="email" placeholder="contact@matfrozen.my" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Initial Password *</label>
+            <input class="form-input" type="text" placeholder="Auto-generated · sent on activation" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Contact Phone</label>
+            <input class="form-input" placeholder="012-345-6789" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact Person</label>
+            <input class="form-input" placeholder="Pak Mat" />
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; margin: 20px 0 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Delivery Address</h4>
+        <div class="form-group">
+          <label class="form-label">Full Delivery Address *</label>
+          <textarea class="form-textarea" id="addrInput" placeholder="Street, town, postcode, state..." oninput="suggestWarehouse(this.value)"></textarea>
+        </div>
+
+        <div class="suggest-card" id="suggestCard">
+          <div class="nearest">
+            <div>
+              <span style="color: var(--text-muted);">Nearest warehouse:</span>
+              <strong id="suggestedName">Klang Valley</strong>
+              <span style="color: var(--text-muted);" id="suggestedDist">· 12 km</span>
+            </div>
+            <span class="chip chip-red">Auto-assigned</span>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <label class="form-label">Status</label>
+          <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <label class="chip" style="cursor:pointer;"><input type="radio" name="ws-status" checked style="margin-right:4px;" /> Active</label>
+            <label class="chip" style="cursor:pointer;"><input type="radio" name="ws-status" style="margin-right:4px;" /> Pending</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="window.SheepyNav.closeModal('addWholesalerModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.closeModal('addWholesalerModal')">Create & Send Credentials →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('admin', 'wholesalers', { showSearch: true });
+
+    const M = window.SheepyMock;
+    const wholesalers = M.state.wholesalers;
+
+    // Render rows
+    const html = wholesalers.map(ws => {
+      const wh = M.getWarehouse(ws.assignedWarehouseId);
+      const initial = ws.businessName.charAt(0);
+      const statusCls = ws.status === 'active' ? 'pill-active' : (ws.status === 'pending' ? 'pill-warn' : 'pill-muted');
+      return `
+        <tr>
+          <td>
+            <div class="ws-row">
+              <div class="ws-avatar">${initial}</div>
+              <div class="info">
+                <div class="name">${ws.businessName}</div>
+                <div class="ssm">SSM ${ws.ssmNo}</div>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div style="font-size: 0.88rem;">${ws.userEmail}</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted);">${ws.contact}</div>
+          </td>
+          <td>
+            <span class="chip">📍 ${wh ? wh.name : '—'}</span>
+          </td>
+          <td>${ws.createdAt}</td>
+          <td><span class="pill ${statusCls}">${ws.status}</span></td>
+          <td>
+            <div style="display: flex; gap: 6px; justify-content: flex-end;">
+              <button class="btn btn-secondary btn-sm">View</button>
+              <button class="btn btn-ghost btn-sm">⋯</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+    document.getElementById('wholesalersBody').innerHTML = html;
+
+    document.getElementById('activeCount').textContent  = wholesalers.filter(w => w.status === 'active').length;
+    document.getElementById('pendingCount').textContent = wholesalers.filter(w => w.status === 'pending').length;
+    // Top region — count by warehouse
+    const counts = {};
+    wholesalers.forEach(w => { counts[w.assignedWarehouseId] = (counts[w.assignedWarehouseId] || 0) + 1; });
+    const topId = Object.keys(counts).sort((a, b) => counts[b] - counts[a])[0];
+    document.getElementById('topRegion').textContent = topId ? M.getWarehouse(topId).name : '—';
+
+    // Auto-suggest warehouse from address
+    function suggestWarehouse(addr) {
+      const card = document.getElementById('suggestCard');
+      if (!addr || addr.length < 8) { card.classList.remove('shown'); return; }
+      // Simple keyword routing for demo
+      const a = addr.toLowerCase();
+      let match = M.getWarehouse('wh-kl');
+      let dist = '~12 km';
+      if (a.includes('penang') || a.includes('george town') || a.includes('butterworth')) { match = M.getWarehouse('wh-pen'); dist = '~8 km'; }
+      else if (a.includes('johor') || a.includes('jb') || a.includes('skudai')) { match = M.getWarehouse('wh-jb'); dist = '~14 km'; }
+      else if (a.includes('kuching') || a.includes('sarawak'))                  { match = M.getWarehouse('wh-kch'); dist = '~6 km'; }
+      document.getElementById('suggestedName').textContent = match.name;
+      document.getElementById('suggestedDist').textContent = '· ' + dist;
+      card.classList.add('shown');
+    }
+    window.suggestWarehouse = suggestWarehouse;
+  </script>
+</body>
+</html>

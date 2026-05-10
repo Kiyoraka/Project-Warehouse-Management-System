@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invoice · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .invoice-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .invoice-paper {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 56px 56px 40px;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      position: relative;
+    }
+
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding-bottom: 24px;
+      border-bottom: 2px solid var(--black);
+      margin-bottom: 32px;
+    }
+    .invoice-brand .logo {
+      width: 50px; height: 50px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      display: grid; place-items: center;
+      font-weight: 800; font-size: 1.3rem;
+      margin-bottom: 10px;
+    }
+    .invoice-brand h1 { font-size: 1.4rem; }
+    .invoice-brand .sub { font-size: 0.85rem; color: var(--gray-700); margin-top: 4px; }
+    .invoice-meta { text-align: right; }
+    .invoice-meta h2 {
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      color: var(--gray-300);
+      margin-bottom: 4px;
+    }
+    .invoice-meta .num { font-family: monospace; font-weight: 700; }
+    .invoice-meta .date { font-size: 0.85rem; color: var(--gray-700); margin-top: 4px; }
+
+    .billing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-bottom: 32px;
+    }
+    .billing-block .lbl {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .billing-block .name { font-weight: 700; font-size: 1.05rem; }
+    .billing-block .info { font-size: 0.88rem; color: var(--gray-700); margin-top: 4px; line-height: 1.5; }
+
+    .invoice-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 24px;
+    }
+    .invoice-table thead th {
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      background: var(--white-soft);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .invoice-table tbody td {
+      padding: 14px;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 0.92rem;
+    }
+    .invoice-table .text-right { text-align: right; }
+
+    .totals-block {
+      margin-left: auto;
+      width: 320px;
+      margin-bottom: 32px;
+    }
+    .totals-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      font-size: 0.92rem;
+    }
+    .totals-row.grand {
+      padding-top: 14px;
+      margin-top: 8px;
+      border-top: 2px solid var(--black);
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+    .totals-row.grand .value { color: var(--red); }
+
+    .invoice-footer {
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .footer-block h5 {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .footer-block p { font-size: 0.82rem; color: var(--gray-700); line-height: 1.6; }
+
+    .halal-stamp {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      padding: 14px;
+      border: 1.5px solid #047857;
+      border-radius: var(--radius-md);
+      background: rgba(16, 185, 129, 0.04);
+    }
+    .halal-stamp .seal {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #047857);
+      color: var(--white);
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+
+    .invoice-stamp {
+      position: absolute;
+      top: 56px; right: 56px;
+      transform: rotate(-12deg);
+      padding: 8px 20px;
+      border: 3px solid var(--status-active);
+      border-radius: 6px;
+      color: var(--status-active);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 0.1em;
+      opacity: 0.4;
+    }
+
+    @media print {
+      body { background: white; }
+      .app-sidebar, .app-topbar, .invoice-toolbar { display: none !important; }
+      .app-shell { grid-template-columns: 1fr !important; grid-template-areas: 'content' !important; }
+      .app-content { padding: 0 !important; }
+      .invoice-paper { box-shadow: none !important; padding: 24px; }
+    }
+
+    @media (max-width: 768px) {
+      .invoice-paper { padding: 32px 24px; }
+      .billing-grid, .invoice-footer { grid-template-columns: 1fr; }
+      .invoice-stamp { display: none; }
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="invoice-toolbar">
+      <div>
+        <h1>Invoice</h1>
+        <div class="text-muted fs-sm">For order <span style="font-family: monospace; font-weight: 700;" id="invCodeTop">SF-2026-0501-001</span></div>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <a href="orders.html" class="btn btn-secondary">← Back to orders</a>
+        <button class="btn btn-secondary" onclick="window.print()">🖨️ Print</button>
+        <button class="btn btn-primary">📄 Download PDF</button>
+      </div>
+    </div>
+
+    <div class="invoice-paper" id="invoicePaper"></div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('wholesaler', 'invoice', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id') || 'ord-001';
+    const o = M.state.orders.find(x => x.id === id) || M.state.orders[0];
+    const ws = M.getWholesaler(o.wholesalerId);
+    const wh = M.getWarehouse(o.warehouseId);
+    const settings = M.state.settings;
+
+    document.getElementById('invCodeTop').textContent = o.code;
+
+    const subtotal = o.items.reduce((s, i) => s + i.total, 0);
+    const sst = subtotal * 0.06;
+    const total = o.total;
+
+    const itemRows = o.items.map(i => `
+      <tr>
+        <td>
+          <div style="font-weight: 600;">${i.name}</div>
+          <div style="font-size: 0.78rem; color: var(--text-muted);">SKU ${i.variantId}</div>
+        </td>
+        <td class="text-right">${i.qty}</td>
+        <td class="text-right">${M.formatRM(i.unitPrice)}</td>
+        <td class="text-right" style="font-weight: 700;">${M.formatRM(i.total)}</td>
+      </tr>`).join('');
+
+    document.getElementById('invoicePaper').innerHTML = `
+      ${o.status === 'delivered' ? '<div class="invoice-stamp">PAID</div>' : ''}
+
+      <div class="invoice-header">
+        <div class="invoice-brand">
+          <div class="logo">S</div>
+          <h1>Sheepy Farm</h1>
+          <div class="sub">Frozen. Halal. Delivered.</div>
+        </div>
+        <div class="invoice-meta">
+          <h2>INVOICE</h2>
+          <div class="num">${o.code}</div>
+          <div class="date">Issued: ${o.placedAt.split(' ')[0]}</div>
+          ${o.deliveredAt ? `<div class="date">Delivered: ${o.deliveredAt.split(' ')[0]}</div>` : ''}
+        </div>
+      </div>
+
+      <div class="billing-grid">
+        <div class="billing-block">
+          <div class="lbl">From</div>
+          <div class="name">Sheepy Farm Sdn Bhd</div>
+          <div class="info">
+            ${settings.site.address}<br>
+            ${settings.site.contactEmail} · ${settings.site.contactPhone}<br>
+            SSM: 202301-001234 · Fulfilled by ${wh.name}
+          </div>
+        </div>
+        <div class="billing-block">
+          <div class="lbl">Bill to</div>
+          <div class="name">${ws.businessName}</div>
+          <div class="info">
+            ${ws.address}<br>
+            ${ws.contact}<br>
+            SSM: ${ws.ssmNo}
+          </div>
+        </div>
+      </div>
+
+      <table class="invoice-table">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th class="text-right">Qty</th>
+            <th class="text-right">Unit Price</th>
+            <th class="text-right">Amount</th>
+          </tr>
+        </thead>
+        <tbody>${itemRows}</tbody>
+      </table>
+
+      <div class="totals-block">
+        <div class="totals-row"><span>Subtotal</span><span>${M.formatRM(subtotal)}</span></div>
+        <div class="totals-row"><span>SST 6%</span><span>${M.formatRM(sst)}</span></div>
+        <div class="totals-row"><span>Delivery fee</span><span>FREE</span></div>
+        <div class="totals-row grand"><span>TOTAL</span><span class="value">${M.formatRM(total + sst)}</span></div>
+        <div style="margin-top: 12px; padding: 10px; background: rgba(16, 185, 129, 0.1); border-radius: var(--radius-sm); font-size: 0.85rem; color: #047857; text-align: center; font-weight: 700;">
+          ✓ ${o.paymentStatus.toUpperCase()} via ${o.payment_method || 'ToyyibPay'}
+        </div>
+      </div>
+
+      <div class="invoice-footer">
+        <div class="footer-block">
+          <h5>Halal Certification</h5>
+          <div class="halal-stamp">
+            <div class="seal">
+              <div style="text-align: center; line-height: 1;">
+                <div style="font-size: 1rem; font-weight: 800;">حلال</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #047857; font-size: 0.92rem;">JAKIM Certified</div>
+              <div style="font-size: 0.78rem; color: var(--gray-700);">${settings.halal.certNo}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted);">Valid until ${settings.halal.certValidUntil}</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-block">
+          <h5>Terms & Notes</h5>
+          <p>This invoice is system-generated. All goods delivered are halal-certified through verified supplier chain. Cold-chain integrity maintained from warehouse to handover. For queries: ${settings.site.contactEmail}.</p>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--gray-100); font-size: 0.78rem; color: var(--text-muted);">
+        Thank you for your order — Sheepy Farm Sdn Bhd
+      </div>
+    `;
+  </script>
+</body>
+</html>

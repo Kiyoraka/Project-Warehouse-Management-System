@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products · Admin · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      padding: 16px;
+    }
+    .toolbar .search {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .toolbar .search input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-size: 0.9rem;
+    }
+    .product-img-cell {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--white-soft), var(--gray-100));
+      display: grid; place-items: center;
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .product-row { display: flex; align-items: center; gap: 12px; }
+    .product-row .info { min-width: 0; }
+    .product-row .info .name { font-weight: 600; }
+    .product-row .info .sub { font-size: 0.78rem; color: var(--text-muted); }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+      justify-content: flex-end;
+    }
+    .row-action {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: grid; place-items: center;
+      color: var(--gray-500);
+      background: transparent;
+      transition: all 0.15s ease;
+    }
+    .row-action:hover { background: var(--gray-100); color: var(--black); }
+    .row-action.danger:hover { background: var(--red-soft); color: var(--red); }
+
+    .variant-list {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Products</h1>
+        <div class="subtitle">Manage your frozen-food catalog · all halal-certified</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary"><span>📤</span> Export</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.openModal('addProductModal')"><span>＋</span> Add Product</button>
+      </div>
+    </div>
+
+    <div class="toolbar glass-strong">
+      <div class="search">
+        <span>🔍</span>
+        <input type="text" placeholder="Search by name or SKU..." />
+      </div>
+      <select class="form-select" style="width: auto;">
+        <option>All Categories</option>
+        <option>Frozen Meat</option>
+        <option>Frozen Seafood</option>
+        <option>Frozen Poultry</option>
+        <option>Frozen Vegetables</option>
+        <option>Frozen Ready-to-Eat</option>
+      </select>
+      <select class="form-select" style="width: auto;">
+        <option>All Storage Zones</option>
+        <option>Frozen -18°C</option>
+        <option>Deep Frozen -25°C</option>
+        <option>Chilled 0-4°C</option>
+      </select>
+      <select class="form-select" style="width: auto;">
+        <option>All Status</option>
+        <option>Active</option>
+        <option>Inactive</option>
+        <option>Draft</option>
+      </select>
+    </div>
+
+    <div class="glass-strong" style="overflow: hidden;">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Variants</th>
+            <th>Total Stock</th>
+            <th>Status</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productsBody"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ============ ADD PRODUCT MODAL ============ -->
+  <div class="modal-backdrop" id="addProductModal">
+    <div class="modal modal-lg">
+      <div class="modal-header">
+        <h3>Add Product</h3>
+        <button class="modal-close" onclick="window.SheepyNav.closeModal('addProductModal')">✕</button>
+      </div>
+
+      <div class="modal-tabs">
+        <div class="modal-tab active" data-tab="identity">Identity</div>
+        <div class="modal-tab" data-tab="pricing">Pricing</div>
+        <div class="modal-tab" data-tab="variants">Variants</div>
+        <div class="modal-tab" data-tab="cold-chain">Cold-Chain</div>
+        <div class="modal-tab" data-tab="media">Media</div>
+      </div>
+
+      <div class="modal-body">
+        <div data-tab-content="identity">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">SKU *</label>
+              <input class="form-input" placeholder="e.g. FL-007" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Product Name *</label>
+              <input class="form-input" placeholder="e.g. Frozen Lamb Loin" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Category *</label>
+              <select class="form-select">
+                <option>Frozen Meat</option>
+                <option>Frozen Seafood</option>
+                <option>Frozen Poultry</option>
+                <option>Frozen Vegetables</option>
+                <option>Frozen Ready-to-Eat</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Brand</label>
+              <input class="form-input" placeholder="Sheepy Farm Premium" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Country of Origin</label>
+              <select class="form-select">
+                <option>Malaysia</option>
+                <option>New Zealand</option>
+                <option>Australia</option>
+                <option>Indonesia</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Supplier *</label>
+              <select class="form-select" id="supplierSelect"></select>
+              <div class="form-hint">Halal cert traces through supplier</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-textarea" placeholder="Brief product description for the catalog..."></textarea>
+          </div>
+        </div>
+
+        <div data-tab-content="pricing" style="display:none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Wholesale Price (RM)</label>
+              <input class="form-input" type="number" step="0.01" placeholder="35.00" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Retail Price (RM) — Phase 2</label>
+              <input class="form-input" type="number" step="0.01" placeholder="48.00" />
+              <div class="form-hint">Hidden until B2C launch</div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Cost Price (RM) — Admin only</label>
+              <input class="form-input" type="number" step="0.01" placeholder="24.00" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">SST Rate (%)</label>
+              <input class="form-input" type="number" value="6" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Min Order Quantity (MOQ)</label>
+              <input class="form-input" type="number" placeholder="5" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Pack Size</label>
+              <input class="form-input" placeholder="vacuum sealed" />
+            </div>
+          </div>
+        </div>
+
+        <div data-tab-content="variants" style="display:none;">
+          <div style="margin-bottom: 12px; font-size: 0.88rem; color: var(--text-muted);">
+            Add multiple sizes/weights of the same product. Each variant gets its own SKU, price, and stock.
+          </div>
+          <div class="glass-subtle" style="padding: 12px; margin-bottom: 8px;">
+            <div class="form-row">
+              <input class="form-input" placeholder="Size (e.g. 1kg)" value="1 kg" />
+              <input class="form-input" placeholder="Variant SKU" value="FL-007-1KG" />
+            </div>
+            <div class="form-row" style="margin-top: 10px;">
+              <input class="form-input" type="number" step="0.01" placeholder="Wholesale price" value="35.00" />
+              <input class="form-input" type="number" placeholder="MOQ" value="5" />
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm">＋ Add Variant</button>
+        </div>
+
+        <div data-tab-content="cold-chain" style="display:none;">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Storage Zone *</label>
+              <select class="form-select">
+                <option>Frozen -18°C</option>
+                <option>Deep Frozen -25°C</option>
+                <option>Chilled 0-4°C</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Shelf Life (days)</label>
+              <input class="form-input" type="number" value="365" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Allergens</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
+              <label class="chip" style="cursor: pointer;"><input type="checkbox" style="margin-right: 4px;" /> Gluten</label>
+              <label class="chip" style="cursor: pointer;"><input type="checkbox" style="margin-right: 4px;" /> Dairy</label>
+              <label class="chip" style="cursor: pointer;"><input type="checkbox" style="margin-right: 4px;" /> Shellfish</label>
+              <label class="chip" style="cursor: pointer;"><input type="checkbox" style="margin-right: 4px;" /> Soy</label>
+              <label class="chip" style="cursor: pointer;"><input type="checkbox" style="margin-right: 4px;" /> Nuts</label>
+            </div>
+          </div>
+          <div class="glass-red glass-card-sm" style="padding: 14px;">
+            <strong>✓ Halal Certified</strong> — All Sheepy Farm products are halal-certified through verified suppliers. Cert info pulled from supplier record.
+          </div>
+        </div>
+
+        <div data-tab-content="media" style="display:none;">
+          <div class="form-group">
+            <label class="form-label">Primary Image</label>
+            <div style="border: 2px dashed var(--border); border-radius: var(--radius-md); padding: 40px; text-align: center; cursor: pointer; background: var(--white-soft);">
+              <div style="font-size: 2.4rem; margin-bottom: 8px;">📁</div>
+              <div style="font-weight: 600;">Drop image or click to browse</div>
+              <div class="form-hint">PNG / JPG, up to 5 MB</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Gallery (up to 4 more)</label>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+              <div style="aspect-ratio: 1; border: 2px dashed var(--border); border-radius: var(--radius-sm); display: grid; place-items: center; cursor: pointer; color: var(--text-muted);">＋</div>
+              <div style="aspect-ratio: 1; border: 2px dashed var(--border); border-radius: var(--radius-sm); display: grid; place-items: center; cursor: pointer; color: var(--text-muted);">＋</div>
+              <div style="aspect-ratio: 1; border: 2px dashed var(--border); border-radius: var(--radius-sm); display: grid; place-items: center; cursor: pointer; color: var(--text-muted);">＋</div>
+              <div style="aspect-ratio: 1; border: 2px dashed var(--border); border-radius: var(--radius-sm); display: grid; place-items: center; cursor: pointer; color: var(--text-muted);">＋</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="window.SheepyNav.closeModal('addProductModal')">Cancel</button>
+        <button class="btn btn-primary" onclick="window.SheepyNav.closeModal('addProductModal')">Save Product →</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('admin', 'products', { showSearch: true });
+
+    // Render products table
+    const products = window.SheepyMock.state.products;
+    const productsHtml = products.map(p => {
+      const totalStock = p.variants.reduce((sum, v) => sum + window.SheepyMock.totalStockForVariant(v.id), 0);
+      const supplier = window.SheepyMock.getSupplier(p.supplierId);
+      const statusClass = p.status === 'active' ? 'pill-active' : 'pill-muted';
+      const variantPills = p.variants.map(v => `<span class="chip">${v.size}</span>`).join('');
+      return `
+        <tr>
+          <td>
+            <div class="product-row">
+              <div class="product-img-cell">${p.image}</div>
+              <div class="info">
+                <div class="name">${p.name}</div>
+                <div class="sub">${p.sku} · ${supplier ? supplier.name : '—'}</div>
+              </div>
+            </div>
+          </td>
+          <td>${p.category}</td>
+          <td><div class="variant-list">${variantPills}</div></td>
+          <td><strong>${totalStock} kg</strong></td>
+          <td><span class="pill ${statusClass}">${p.status}</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="row-action" title="Edit">✏️</button>
+              <button class="row-action" title="View">👁️</button>
+              <button class="row-action danger" title="Archive">🗑️</button>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+    document.getElementById('productsBody').innerHTML = productsHtml;
+
+    // Populate supplier dropdown in modal
+    const suppliers = window.SheepyMock.state.suppliers;
+    document.getElementById('supplierSelect').innerHTML = suppliers.map(s =>
+      `<option value="${s.id}">${s.name} (Cert: ${s.halalCertNo})</option>`
+    ).join('');
+
+    // Modal tabs
+    document.querySelectorAll('.modal-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const target = tab.getAttribute('data-tab');
+        document.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.querySelectorAll('[data-tab-content]').forEach(c => {
+          c.style.display = c.getAttribute('data-tab-content') === target ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</body>
+</html>

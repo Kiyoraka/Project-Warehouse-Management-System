@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Active · Driver · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <link rel="stylesheet" href="../shared/mobile.css" />
+</head>
+<body class="mobile-shell">
+
+  <header class="m-topbar">
+    <div>
+      <a href="routes.html" style="color: var(--gray-700); text-decoration: none; font-size: 0.85rem;">← Routes</a>
+      <div class="greet" style="margin-top: 2px;">Active Delivery</div>
+    </div>
+    <button class="icon-btn">📞</button>
+  </header>
+
+  <main class="m-content">
+
+    <div class="m-detail">
+      <div style="display:flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+        <div>
+          <div style="font-family: monospace; font-weight: 700;">SF-2026-0503-002</div>
+          <div class="text-muted fs-sm">Klang Valley → Bangsar</div>
+        </div>
+        <span class="pill pill-warn">Out for delivery</span>
+      </div>
+
+      <div class="m-field">
+        <div class="label">Wholesaler</div>
+        <div class="value">Mat Frozen Mart</div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px;">📞 012-3456789 · 📍 12 Jalan Bangsar, KL</div>
+      </div>
+
+      <div class="m-field">
+        <div class="label">Items (2)</div>
+        <div style="font-size: 0.88rem; margin-top: 4px;">
+          • 11× Frozen Squid Rings 500g<br>
+          <span class="text-muted" style="font-size: 0.78rem;">Total: RM 198.00</span>
+        </div>
+      </div>
+
+      <div class="m-temp">
+        <span style="font-size:1.2rem;">❄️</span>
+        <div>Pickup temp: <strong>-19°C</strong> (within range) · Logged at 12:08</div>
+      </div>
+
+      <h4 style="font-size: 0.95rem; margin: 12px 0 8px;">Confirm Delivery</h4>
+
+      <div class="m-photo">
+        <div class="icon">📷</div>
+        <div style="font-weight: 600;">Tap to take handover photo</div>
+        <div class="form-hint">Required for proof of delivery</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Recipient Name *</label>
+        <input class="form-input" placeholder="e.g. Pak Mat" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Delivery Temp (°C)</label>
+        <input class="form-input" type="number" value="-18" />
+        <div class="form-hint">Read from cold-bag thermometer at handover</div>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg" style="margin-top: 16px;" onclick="markDelivered()">✓ Mark Delivered</button>
+    </div>
+
+  </main>
+
+  <div data-slot="bottom-nav"></div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    const bnHtml = window.SheepyNav.BOTTOM_NAVS.driver.map(it => `
+      <a href="${it.href}" class="m-bn-item${it.key === 'active' ? ' active' : ''}">
+        <span class="icon">${it.icon}</span><span>${it.label}</span>
+      </a>`).join('');
+    document.querySelector('[data-slot="bottom-nav"]').outerHTML = `<nav class="m-bottom-nav">${bnHtml}</nav>`;
+
+    function markDelivered() {
+      alert('Marked delivered ✓ Thank you!');
+      setTimeout(() => location.href = 'routes.html', 600);
+    }
+    window.markDelivered = markDelivered;
+  </script>
+</body>
+</html>

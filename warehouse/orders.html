@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Orders · Warehouse · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .status-tabs { display: flex; gap: 6px; padding: 6px; margin-bottom: 20px; width: fit-content; }
+    .status-tab {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      color: var(--gray-700);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .status-tab:hover { background: var(--white-soft); }
+    .status-tab.active { background: linear-gradient(135deg, var(--red), var(--red-deep)); color: var(--white); }
+    .status-tab .count {
+      background: rgba(0,0,0,0.1); padding: 1px 8px; border-radius: 999px; font-size: 0.72rem;
+    }
+    .status-tab.active .count { background: rgba(255,255,255,0.2); color: var(--white); }
+
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+    }
+    .order-card {
+      padding: 20px;
+      transition: all 0.2s ease;
+    }
+    .order-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .order-card .top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 12px;
+    }
+    .order-card .code { font-family: monospace; font-weight: 700; font-size: 0.95rem; }
+    .order-card .ws { font-size: 0.85rem; color: var(--text-muted); margin-top: 2px; }
+    .order-card .item-list { padding: 12px 0; border-top: 1px solid var(--gray-100); border-bottom: 1px solid var(--gray-100); margin: 12px 0; }
+    .order-card .item { font-size: 0.85rem; padding: 4px 0; display: flex; justify-content: space-between; }
+    .order-card .item .qty { color: var(--red); font-weight: 700; min-width: 40px; }
+    .order-card .footer-row { display: flex; justify-content: space-between; align-items: center; }
+    .order-card .total { font-weight: 800; font-size: 1.05rem; }
+    .fulfillment-pill {
+      font-size: 0.72rem; padding: 2px 8px; border-radius: 4px;
+      background: var(--gray-100); color: var(--gray-700); font-weight: 600;
+    }
+    .fulfillment-pill.pickup { background: rgba(59, 130, 246, 0.10); color: #1e40af; }
+    .fulfillment-pill.delivery { background: var(--red-soft); color: var(--red-deep); }
+
+    /* Picker view modal */
+    .pick-line {
+      padding: 14px;
+      background: var(--white-soft);
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+    }
+    .pick-line .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .pick-line .name { font-weight: 600; }
+    .pick-line .qty-needed { color: var(--red); font-weight: 700; }
+    .fefo-suggestion {
+      background: rgba(254, 226, 226, 0.4);
+      border: 1px solid rgba(224, 36, 36, 0.25);
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .fefo-badge {
+      font-weight: 800;
+      font-size: 0.72rem;
+      background: var(--red);
+      color: var(--white);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Order Queue</h1>
+        <div class="subtitle">Monitor order pipeline · packing staff pull from queue · drivers grab packed orders</div>
+      </div>
+      <div class="page-header-actions">
+        <a href="staff.html" class="btn btn-secondary"><span>👥</span> Staff Status</a>
+        <button class="btn btn-secondary"><span>📤</span> Export</button>
+      </div>
+    </div>
+
+    <div class="status-tabs glass-strong" id="statusTabs"></div>
+
+    <div class="orders-grid" id="ordersGrid"></div>
+
+    <div class="glass-red glass-card-sm" style="padding: 14px; font-size: 0.85rem; margin-top: 20px; display: flex; gap: 10px; align-items: center;">
+      💡 <span><strong>Manager view only:</strong> Packing staff auto-pull orders from their mobile queue (status: <code>new</code> → <code>picking</code> → <code>packed</code>) · Drivers grab packed orders for delivery from their mobile route. You can re-prioritize via the order detail page if needed.</span>
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('warehouse', 'orders', { showSearch: true });
+
+    const M = window.SheepyMock;
+    const wh = 'wh-kl';
+
+    const TABS = [
+      { key: 'all',              label: 'All' },
+      { key: 'new',              label: 'New' },
+      { key: 'picking',          label: 'Picking' },
+      { key: 'ready',            label: 'Ready' },
+      { key: 'out_for_delivery', label: 'Out for Delivery' },
+      { key: 'delivered',        label: 'Delivered' },
+    ];
+
+    function renderTabs(activeKey) {
+      const orders = M.ordersForWarehouse(wh);
+      const html = TABS.map(t => {
+        const count = t.key === 'all' ? orders.length : orders.filter(o => o.status === t.key).length;
+        return `<div class="status-tab${t.key === activeKey ? ' active' : ''}" onclick="filterOrders('${t.key}')">${t.label} <span class="count">${count}</span></div>`;
+      }).join('');
+      document.getElementById('statusTabs').innerHTML = html;
+    }
+
+    function filterOrders(key) {
+      renderTabs(key);
+      const orders = M.ordersForWarehouse(wh).filter(o => key === 'all' || o.status === key);
+      if (orders.length === 0) {
+        document.getElementById('ordersGrid').innerHTML = `<div class="text-muted text-center" style="padding:60px; grid-column: 1/-1;">No orders in this state</div>`;
+        return;
+      }
+      const html = orders.map(o => {
+        const ws = M.getWholesaler(o.wholesalerId);
+        const stCls = {
+          new: 'pill-muted', picking: 'pill-warn',
+          ready: 'pill-info', out_for_delivery: 'pill-info', delivered: 'pill-active',
+        }[o.status] || 'pill-muted';
+        const items = o.items.map(i => `<div class="item"><span>${i.name}</span><span class="qty">×${i.qty}</span></div>`).join('');
+        const ful = o.fulfillmentMethod === 'pickup' ? 'pickup' : 'delivery';
+        // Manager is monitor-only — no longer picks orders themselves
+        const action = o.status === 'new' ?
+          `<span class="text-muted fs-sm" style="font-style: italic;">Awaiting packer</span>` :
+          o.status === 'picking' ? `<span class="text-muted fs-sm" style="font-style: italic;">Packer working</span>` :
+          o.status === 'out_for_delivery' ? `<span class="text-muted fs-sm" style="font-style: italic;">Driver en route</span>` :
+          `<button class="btn btn-ghost btn-sm">View →</button>`;
+        return `
+          <div class="order-card glass-strong">
+            <div class="top">
+              <div>
+                <div class="code">${o.code}</div>
+                <div class="ws">${ws.businessName}</div>
+              </div>
+              <span class="pill ${stCls}">${o.status.replace(/_/g, ' ')}</span>
+            </div>
+            <div class="text-muted fs-sm">${o.placedAt}</div>
+            <div class="item-list">${items}</div>
+            <div class="footer-row">
+              <div>
+                <div class="total">${M.formatRM(o.total)}</div>
+                <span class="fulfillment-pill ${ful}">${o.fulfillmentMethod}</span>
+              </div>
+              ${action}
+            </div>
+          </div>`;
+      }).join('');
+      document.getElementById('ordersGrid').innerHTML = html;
+    }
+
+    window.filterOrders = filterOrders;
+    filterOrders('all');
+  </script>
+</body>
+</html>

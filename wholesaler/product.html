@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .breadcrumb { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px; }
+    .breadcrumb a { color: var(--text-muted); }
+    .breadcrumb a:hover { color: var(--red); }
+
+    .product-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+    .gallery .main {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, var(--white-soft), var(--gray-100));
+      display: grid; place-items: center;
+      font-size: 8rem;
+      border-radius: var(--radius-xl);
+      position: relative;
+      overflow: hidden;
+    }
+    .gallery .main .halal-corner {
+      position: absolute;
+      top: 16px; right: 16px;
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #047857);
+      color: var(--white);
+      display: grid; place-items: center;
+      box-shadow: var(--shadow-md);
+    }
+    .gallery .thumbs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .gallery .thumb {
+      aspect-ratio: 1;
+      background: var(--white-soft);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: grid; place-items: center;
+      font-size: 1.6rem;
+      cursor: pointer;
+    }
+    .gallery .thumb.active { border-color: var(--red); }
+
+    .info-panel { padding: 4px; }
+    .info-panel h1 { font-size: 2rem; margin-bottom: 4px; }
+    .info-panel .cat { color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.78rem; font-weight: 600; }
+    .info-panel .desc { color: var(--gray-700); margin: 16px 0; }
+
+    .price-block { padding: 20px; margin: 20px 0; }
+    .price-block .label { font-size: 0.78rem; color: var(--text-muted); }
+    .price-block .price {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--red);
+      letter-spacing: -0.02em;
+    }
+
+    .variant-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0;
+    }
+    .variant-btn {
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      border: 2px solid var(--border);
+      background: var(--white);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+    .variant-btn:hover { border-color: var(--gray-300); }
+    .variant-btn.active { border-color: var(--red); background: var(--red-soft); }
+    .variant-btn .size { font-weight: 700; }
+    .variant-btn .vp { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+    .variant-btn.active .vp { color: var(--red-deep); font-weight: 600; }
+
+    .qty-stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 12px 0;
+    }
+    .qty-btn {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--white);
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .qty-input {
+      width: 80px;
+      text-align: center;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .info-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .info-list .item {
+      padding: 12px;
+      background: var(--white-soft);
+      border-radius: var(--radius-sm);
+    }
+    .info-list .item .lbl { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .info-list .item .val { font-weight: 600; font-size: 0.92rem; margin-top: 2px; }
+
+    @media (max-width: 1024px) { .product-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="breadcrumb"><a href="catalog.html">Catalog</a> · <a href="catalog.html">Frozen Meat</a> · <span>Frozen Lamb Shoulder</span></div>
+
+    <div class="product-layout">
+      <div class="gallery">
+        <div class="main">
+          🥩
+          <div class="halal-corner">
+            <div style="text-align:center; line-height:1;">
+              <div style="font-size:1rem; font-weight: 800;">حلال</div>
+            </div>
+          </div>
+        </div>
+        <div class="thumbs">
+          <div class="thumb active">🥩</div>
+          <div class="thumb">📦</div>
+          <div class="thumb">🏷️</div>
+          <div class="thumb">📋</div>
+        </div>
+      </div>
+
+      <div class="info-panel">
+        <div class="cat" id="prodCat">Frozen Meat</div>
+        <h1 id="prodName">Frozen Lamb Shoulder</h1>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <span class="halal-badge">
+            <span class="ring">✓</span>
+            <span>JAKIM Halal</span>
+          </span>
+          <span class="chip">Sheepy Farm Premium</span>
+        </div>
+        <p class="desc" id="prodDesc">Premium grass-fed New Zealand lamb shoulder, vacuum-sealed for cold-chain delivery.</p>
+
+        <div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">SIZE / VARIANT</div>
+          <div class="variant-row" id="variantRow"></div>
+        </div>
+
+        <div class="glass-strong price-block">
+          <div class="label">Wholesale price</div>
+          <div class="price" id="prodPrice">RM 35.00</div>
+          <div style="margin-top: 8px;" class="text-muted fs-sm">MOQ: <strong id="prodMoq" style="color: var(--red);">5</strong> units · Pack size: <strong style="color: var(--black);" id="prodPack">vacuum sealed</strong></div>
+
+          <div class="qty-stepper" style="margin-top: 16px;">
+            <button class="qty-btn" onclick="adjustQty(-1)">−</button>
+            <input class="qty-input" type="number" id="qtyInput" value="5" />
+            <button class="qty-btn" onclick="adjustQty(1)">＋</button>
+            <span class="text-muted fs-sm" style="margin-left: 8px;" id="qtyMeta">= RM 175.00</span>
+          </div>
+
+          <div style="display: flex; gap: 10px; margin-top: 16px;">
+            <button class="btn btn-primary btn-block btn-lg" onclick="addCart()">＋ Add to Cart</button>
+            <a href="quote-request.html" class="btn btn-secondary btn-lg" title="Need a custom quantity?">💬</a>
+          </div>
+          <div class="text-muted fs-sm text-center" style="margin-top: 8px;">Need 8 kg or non-standard quantity? <a href="quote-request.html">Submit a custom quote →</a></div>
+        </div>
+
+        <div class="info-list">
+          <div class="item"><div class="lbl">Storage Zone</div><div class="val">❄️ Frozen -18°C</div></div>
+          <div class="item"><div class="lbl">Shelf Life</div><div class="val">365 days</div></div>
+          <div class="item"><div class="lbl">Country of Origin</div><div class="val">🇳🇿 New Zealand</div></div>
+          <div class="item"><div class="lbl">Supplier</div><div class="val">ABC Halal Sdn Bhd</div></div>
+        </div>
+
+        <div class="glass-red glass-card-sm" style="padding: 14px; font-size: 0.88rem; display: flex; gap: 10px; align-items: center;">
+          🔍 <strong>Halal traceability:</strong> JAKIM-2024-0142 · valid through 2027-08-15. Every kg sourced from a halal-certified supplier.
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('wholesaler', 'catalog', { showSearch: false });
+
+    const M = window.SheepyMock;
+    // Get product from URL ?id=p-001 (default to lamb)
+    const params = new URLSearchParams(location.search);
+    const productId = params.get('id') || 'p-001';
+    const product = M.getProduct(productId);
+
+    if (product) {
+      document.getElementById('prodCat').textContent = product.category;
+      document.getElementById('prodName').textContent = product.name;
+      document.getElementById('prodDesc').textContent = product.description;
+      document.querySelector('.gallery .main').firstChild.textContent = ' ';
+      document.querySelector('.gallery .main').innerHTML = product.image + document.querySelector('.gallery .main').innerHTML.slice(2);
+
+      const variantsHtml = product.variants.map((v, i) => `
+        <div class="variant-btn ${i === 0 ? 'active' : ''}" data-id="${v.id}" data-price="${v.wholesalePrice}" data-moq="${v.moq}" data-pack="${v.packSize}" onclick="selectVariant(this)">
+          <div class="size">${v.size}</div>
+          <div class="vp">${M.formatRM(v.wholesalePrice)}</div>
+        </div>`).join('');
+      document.getElementById('variantRow').innerHTML = variantsHtml;
+
+      // Default to first variant
+      const v = product.variants[0];
+      updatePrice(v);
+    }
+
+    function selectVariant(el) {
+      document.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      const v = {
+        wholesalePrice: parseFloat(el.dataset.price),
+        moq: parseInt(el.dataset.moq, 10),
+        packSize: el.dataset.pack
+      };
+      updatePrice(v);
+      document.getElementById('qtyInput').value = v.moq;
+      recalc();
+    }
+
+    function updatePrice(v) {
+      document.getElementById('prodPrice').textContent = M.formatRM(v.wholesalePrice);
+      document.getElementById('prodMoq').textContent = v.moq;
+      document.getElementById('prodPack').textContent = v.packSize;
+    }
+
+    function adjustQty(delta) {
+      const input = document.getElementById('qtyInput');
+      const moq = parseInt(document.querySelector('.variant-btn.active').dataset.moq, 10);
+      let q = parseInt(input.value || moq, 10) + delta;
+      if (q < moq) q = moq;
+      input.value = q;
+      recalc();
+    }
+    function recalc() {
+      const qty = parseInt(document.getElementById('qtyInput').value || 1, 10);
+      const price = parseFloat(document.querySelector('.variant-btn.active').dataset.price);
+      document.getElementById('qtyMeta').textContent = '= ' + M.formatRM(qty * price);
+    }
+    function addCart() {
+      // demo: bump cart in mock state
+      const v = document.querySelector('.variant-btn.active');
+      const variantId = v.dataset.id;
+      const variant = M.getVariant(variantId);
+      const qty = parseInt(document.getElementById('qtyInput').value, 10);
+      M.state.cart.push({ variantId, name: variant.product.name + ' ' + variant.size, qty, unitPrice: variant.wholesalePrice });
+      M.save();
+      alert('Added to cart ✓');
+      window.location.href = 'cart.html';
+    }
+    window.selectVariant = selectVariant;
+    window.adjustQty = adjustQty;
+    window.recalc = recalc;
+    window.addCart = addCart;
+  </script>
+</body>
+</html>

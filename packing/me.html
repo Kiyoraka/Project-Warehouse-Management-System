@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Me · Packing · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <link rel="stylesheet" href="../shared/mobile.css" />
+</head>
+<body class="mobile-shell">
+
+  <header class="m-topbar">
+    <div class="greet">Profile</div>
+    <button class="icon-btn">⚙️</button>
+  </header>
+
+  <main class="m-content">
+
+    <div class="m-detail" style="text-align: center;">
+      <div style="width:80px; height:80px; margin: 0 auto 14px; border-radius: 50%; background: linear-gradient(135deg, var(--red), var(--red-deep)); color:#fff; display:grid; place-items:center; font-weight: 800; font-size: 2rem;">L</div>
+      <h2 style="font-size: 1.3rem;">Cik Liyana</h2>
+      <div class="text-muted fs-sm" style="margin-top: 4px;">Packing Staff · Klang Valley</div>
+      <div style="display: flex; gap: 8px; justify-content: center; margin-top: 12px;">
+        <span class="halal-badge"><span class="ring">✓</span><span>Halal-trained</span></span>
+        <span class="chip">Since Mar 2026</span>
+      </div>
+    </div>
+
+    <div class="m-stats-grid">
+      <div class="m-stat-tile"><div class="num">4</div><div class="lbl">Today</div></div>
+      <div class="m-stat-tile"><div class="num">26</div><div class="lbl">This Week</div></div>
+      <div class="m-stat-tile"><div class="num">98%</div><div class="lbl">FEFO Score</div></div>
+      <div class="m-stat-tile"><div class="num">14m</div><div class="lbl">Avg Pack Time</div></div>
+    </div>
+
+    <div class="m-detail">
+      <h4 style="margin-bottom: 12px;">Settings</h4>
+      <div class="m-field" style="cursor: pointer;">
+        <div class="value">🔔 Notifications</div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">New order alerts, batch expiry warnings</div>
+      </div>
+      <div class="m-field" style="cursor: pointer;">
+        <div class="value">📋 Pack History</div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">Last 30 days of completed packs</div>
+      </div>
+      <div class="m-field" style="cursor: pointer;">
+        <div class="value">❓ Help & Training</div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">FEFO procedure, cold-chain SOPs</div>
+      </div>
+    </div>
+
+    <a href="../login.html" class="btn btn-secondary btn-block">🚪 Logout</a>
+
+  </main>
+
+  <div data-slot="bottom-nav"></div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    const bnHtml = window.SheepyNav.BOTTOM_NAVS.packing.map(it => `
+      <a href="${it.href}" class="m-bn-item${it.key === 'me' ? ' active' : ''}">
+        <span class="icon">${it.icon}</span><span>${it.label}</span>
+      </a>`).join('');
+    document.querySelector('[data-slot="bottom-nav"]').outerHTML = `<nav class="m-bottom-nav">${bnHtml}</nav>`;
+  </script>
+</body>
+</html>

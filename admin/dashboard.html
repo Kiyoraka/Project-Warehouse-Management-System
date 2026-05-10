@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Admin · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+    .chart-card { padding: 24px; }
+    .chart-card .chart-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .chart-card .chart-header h3 { font-size: 1.05rem; }
+    .chart-card .chart-header .actions { display: flex; gap: 8px; }
+    .chart-wrap { height: 280px; position: relative; }
+
+    .recent-orders-table .table tbody td { padding: 10px 16px; }
+    .order-code { font-family: 'Inter', monospace; font-weight: 600; font-size: 0.85rem; }
+
+    .expiring-list { padding: 24px; }
+    .expiring-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .expiring-item:last-child { border-bottom: none; }
+    .expiring-item .badge-days {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      background: var(--red-soft);
+      color: var(--red-deep);
+      font-weight: 800;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .expiring-item .badge-days.warn { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+    .expiring-item .badge-days.urgent { background: var(--red-soft); color: var(--red-deep); }
+    .expiring-item .info { flex: 1; min-width: 0; }
+    .expiring-item .info .name { font-weight: 600; font-size: 0.92rem; }
+    .expiring-item .info .meta { font-size: 0.78rem; color: var(--text-muted); }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Dashboard</h1>
+        <div class="subtitle">Welcome back · Tuesday, May 5 2026</div>
+      </div>
+      <div class="page-header-actions">
+        <button class="btn btn-secondary"><span>📅</span> Last 30 days</button>
+        <button class="btn btn-primary"><span>＋</span> Quick Action</button>
+      </div>
+    </div>
+
+    <!-- KPI tiles -->
+    <div class="kpi-grid">
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Today's Revenue</div>
+        <div class="value">RM 12,480</div>
+        <div class="delta delta-up">▲ 18% vs yesterday</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Active Orders</div>
+        <div class="value">47</div>
+        <div class="delta" style="color: var(--text-muted)">8 picking · 11 out for delivery</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Pending Quotes</div>
+        <div class="value">12</div>
+        <div class="delta delta-up">▲ 3 new today</div>
+      </div>
+      <div class="glass-strong glass-card kpi-tile">
+        <div class="label">Low-Stock Alerts</div>
+        <div class="value" style="color: var(--red);">5</div>
+        <div class="delta delta-down">2 items below reorder threshold</div>
+      </div>
+    </div>
+
+    <!-- Sales trend + top SKUs row -->
+    <div class="dashboard-grid">
+      <div class="chart-card glass-strong">
+        <div class="chart-header">
+          <div>
+            <h3>Sales Trend</h3>
+            <div class="text-muted fs-sm">Last 30 days · all warehouses</div>
+          </div>
+          <div class="actions">
+            <button class="chip">7D</button>
+            <button class="chip chip-red">30D</button>
+            <button class="chip">90D</button>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="salesTrendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="chart-card glass-strong">
+        <div class="chart-header">
+          <h3>Top 5 SKUs</h3>
+          <div class="text-muted fs-sm">By revenue</div>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="topSkusChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent orders + expiring batches -->
+    <div class="dashboard-grid">
+      <div class="chart-card glass-strong recent-orders-table">
+        <div class="chart-header">
+          <h3>Recent Orders</h3>
+          <a href="#" style="font-size: 0.85rem; font-weight: 600;">View all →</a>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Wholesaler</th>
+              <th>Warehouse</th>
+              <th>Total</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="recentOrdersBody"></tbody>
+        </table>
+      </div>
+
+      <div class="expiring-list glass-strong">
+        <div class="chart-header" style="margin-bottom: 12px;">
+          <h3>Expiring Soon</h3>
+          <span class="chip chip-red">FEFO</span>
+        </div>
+        <div id="expiringList"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script>
+    window.SheepyNav.insertNav('admin', 'dashboard', { showSearch: true });
+
+    // ===== Recent Orders =====
+    const orders = window.SheepyMock.state.orders;
+    const ordersHtml = orders.slice(0, 5).map(o => {
+      const ws = window.SheepyMock.getWholesaler(o.wholesalerId);
+      const wh = window.SheepyMock.getWarehouse(o.warehouseId);
+      const statusClass = {
+        delivered: 'pill-active',
+        out_for_delivery: 'pill-info',
+        picking: 'pill-warn',
+        new: 'pill-muted',
+      }[o.status] || 'pill-muted';
+      const statusLabel = o.status.replace(/_/g, ' ');
+      return `
+        <tr>
+          <td><span class="order-code">${o.code}</span></td>
+          <td>${ws ? ws.businessName : '—'}</td>
+          <td>${wh ? wh.name : '—'}</td>
+          <td><strong>${window.SheepyMock.formatRM(o.total)}</strong></td>
+          <td><span class="pill ${statusClass}">${statusLabel}</span></td>
+        </tr>`;
+    }).join('');
+    document.getElementById('recentOrdersBody').innerHTML = ordersHtml;
+
+    // ===== Expiring batches =====
+    const expiring = window.SheepyMock.expiringBatches(180);
+    const today = new Date('2026-05-05');
+    const expiringHtml = expiring.slice(0, 5).map(b => {
+      const v = window.SheepyMock.getVariant(b.variantId);
+      const wh = window.SheepyMock.getWarehouse(b.warehouseId);
+      const days = Math.round((new Date(b.expiryDate) - today) / (1000 * 60 * 60 * 24));
+      const cls = days <= 60 ? 'urgent' : (days <= 120 ? 'warn' : '');
+      return `
+        <div class="expiring-item">
+          <div class="badge-days ${cls}">
+            <div style="text-align:center; line-height: 1;">
+              <div style="font-size: 1.1rem;">${days}</div>
+              <div style="font-size: 0.6rem; opacity: 0.8;">DAYS</div>
+            </div>
+          </div>
+          <div class="info">
+            <div class="name">${v ? v.product.name + ' ' + v.size : 'Unknown'}</div>
+            <div class="meta">Batch ${b.batchNo} · ${wh ? wh.name : '—'} · ${b.qtyRemaining} units left</div>
+          </div>
+        </div>`;
+    }).join('') || '<div style="text-align:center; color: var(--text-muted); padding: 24px;">All batches healthy ✓</div>';
+    document.getElementById('expiringList').innerHTML = expiringHtml;
+
+    // ===== Charts =====
+    const redColor = getComputedStyle(document.documentElement).getPropertyValue('--red').trim();
+    const redDeep  = getComputedStyle(document.documentElement).getPropertyValue('--red-deep').trim();
+
+    Chart.defaults.font.family = 'Inter, sans-serif';
+    Chart.defaults.color = '#525252';
+    Chart.defaults.borderColor = 'rgba(0, 0, 0, 0.06)';
+
+    // Sales trend
+    const salesData = [
+      8400, 9200, 7800, 10500, 11200, 9800, 12100,
+      11500, 10800, 13200, 12500, 14100, 13800, 12900,
+      11900, 13500, 14800, 13200, 15100, 14200, 13800,
+      15400, 14900, 16200, 15800, 14500, 13900, 12800, 12480
+    ];
+    new Chart(document.getElementById('salesTrendChart'), {
+      type: 'line',
+      data: {
+        labels: salesData.map((_, i) => `Apr ${7 + i}`),
+        datasets: [{
+          label: 'Revenue (RM)',
+          data: salesData,
+          borderColor: redColor,
+          backgroundColor: ctx => {
+            const grad = ctx.chart.ctx.createLinearGradient(0, 0, 0, 280);
+            grad.addColorStop(0, 'rgba(224, 36, 36, 0.25)');
+            grad.addColorStop(1, 'rgba(224, 36, 36, 0)');
+            return grad;
+          },
+          tension: 0.4,
+          fill: true,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: redDeep,
+          pointHoverBorderColor: '#fff',
+          pointHoverBorderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { callback: v => 'RM ' + (v/1000) + 'k' } },
+          x: { ticks: { maxTicksLimit: 8 } }
+        }
+      }
+    });
+
+    // Top SKUs
+    new Chart(document.getElementById('topSkusChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Lamb 1kg', 'Beef 1kg', 'Chicken', 'Lamb 2kg', 'Squid'],
+        datasets: [{
+          label: 'Revenue',
+          data: [38500, 28400, 21200, 18900, 14200],
+          backgroundColor: [redDeep, redColor, '#ef4444', '#f87171', '#fca5a5'],
+          borderRadius: 8,
+          barThickness: 24,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { callback: v => 'RM ' + (v/1000) + 'k' } },
+        }
+      }
+    });
+  </script>
+</body>
+</html>

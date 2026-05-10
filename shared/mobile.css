@@ -1,0 +1,233 @@
+/* ============================================================
+   Sheepy Farm — Mobile-Only Page Shell
+   Used by packing/* and driver/* pages
+   Locks body to 480px to demo native-app feel on desktop screens
+   ============================================================ */
+
+body.mobile-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  padding-bottom: 80px;
+  background:
+    radial-gradient(ellipse at top, rgba(224, 36, 36, 0.12), transparent 60%),
+    radial-gradient(ellipse at bottom, rgba(224, 36, 36, 0.08), transparent 50%),
+    #fdfdfd;
+}
+
+.m-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.m-topbar .greet { font-weight: 700; }
+.m-topbar .greet .sub { font-size: 0.78rem; color: var(--text-muted); font-weight: 400; }
+.m-topbar .icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  display: grid; place-items: center;
+  background: var(--white-soft);
+  color: var(--gray-700);
+  cursor: pointer;
+}
+
+.m-content { padding: 16px; }
+
+.m-summary {
+  padding: 18px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--red), var(--red-deep));
+  color: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px var(--red-glow);
+}
+.m-summary .label { font-size: 0.78rem; opacity: 0.9; }
+.m-summary .total { font-size: 1.7rem; font-weight: 800; margin-top: 4px; }
+.m-summary .stats {
+  display: flex; gap: 16px;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+.m-summary .stat .num { font-size: 1.2rem; font-weight: 800; }
+.m-summary .stat .label-stat { font-size: 0.72rem; opacity: 0.85; }
+
+.m-card {
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: var(--radius-md);
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+}
+.m-card.active {
+  border: 2px solid var(--red);
+  background: rgba(254, 226, 226, 0.4);
+}
+.m-card .seq {
+  display: inline-grid; place-items: center;
+  width: 28px; height: 28px;
+  background: var(--red);
+  color: var(--white);
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+.m-card .seq.done { background: #10b981; }
+.m-card .top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.m-card .ws { font-weight: 700; }
+.m-card .addr { font-size: 0.85rem; color: var(--gray-700); margin-top: 4px; }
+.m-card .meta {
+  display: flex; justify-content: space-between;
+  font-size: 0.78rem; color: var(--text-muted);
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px solid var(--gray-100);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.m-detail {
+  padding: 18px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  margin-bottom: 16px;
+}
+.m-field {
+  padding: 12px;
+  background: var(--white-soft);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+}
+.m-field .label {
+  font-size: 0.72rem; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+.m-field .value { font-weight: 600; margin-top: 2px; }
+
+.m-photo {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 32px 20px;
+  text-align: center;
+  background: var(--white-soft);
+  margin-bottom: 12px;
+}
+.m-photo .icon { font-size: 2.4rem; margin-bottom: 8px; }
+
+.m-temp {
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+}
+
+/* Pick line — for packing FEFO assist */
+.pick-line {
+  padding: 14px;
+  background: var(--white-soft);
+  border-radius: var(--radius-sm);
+  margin-bottom: 10px;
+}
+.pick-line .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.pick-line .name { font-weight: 600; }
+.pick-line .qty-needed { color: var(--red); font-weight: 700; }
+.fefo-suggest {
+  background: rgba(254, 226, 226, 0.4);
+  border: 1px solid rgba(224, 36, 36, 0.25);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.fefo-badge {
+  font-weight: 800;
+  font-size: 0.72rem;
+  background: var(--red);
+  color: var(--white);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.pick-line .check-row {
+  display: flex; gap: 8px; align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--gray-100);
+}
+.pick-line .check-row input[type="checkbox"] {
+  width: 22px; height: 22px;
+  accent-color: var(--red);
+  cursor: pointer;
+}
+
+/* Bottom nav for mobile-only pages — always visible */
+.m-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 72px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border);
+  padding: 8px;
+  z-index: 100;
+}
+.m-bn-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 12px; border-radius: 10px;
+  color: rgba(0,0,0,0.55);
+  font-size: 0.7rem; font-weight: 500;
+  flex: 1; max-width: 90px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.m-bn-item .icon { font-size: 1.4rem; }
+.m-bn-item.active { color: var(--red); }
+.m-bn-item.active .icon { transform: scale(1.1); }
+
+/* Stats grid for "Done" / "Me" pages */
+.m-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.m-stat-tile {
+  padding: 14px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+.m-stat-tile .num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--red);
+}
+.m-stat-tile .lbl {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}

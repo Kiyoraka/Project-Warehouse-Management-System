@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Routes · Driver · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <link rel="stylesheet" href="../shared/mobile.css" />
+</head>
+<body class="mobile-shell">
+
+  <header class="m-topbar">
+    <div>
+      <div class="greet">Hi <span id="userName">Encik Faizal</span></div>
+      <div class="sub">Driver · Klang Valley · Tuesday May 5</div>
+    </div>
+    <button class="icon-btn">🔔</button>
+  </header>
+
+  <main class="m-content">
+
+    <div class="m-summary">
+      <div class="label">Today's earnings</div>
+      <div class="total">RM 38.00</div>
+      <div class="stats">
+        <div class="stat"><div class="num">2</div><div class="label-stat">Done</div></div>
+        <div class="stat"><div class="num">1</div><div class="label-stat">Active</div></div>
+        <div class="stat"><div class="num">2</div><div class="label-stat">Upcoming</div></div>
+      </div>
+    </div>
+
+    <h3 style="margin-bottom: 12px; font-size: 1rem;">Today's Routes (sorted)</h3>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Sambal Sedap Resto</span>
+        <span class="pill pill-active" style="margin-left:auto;">Delivered</span>
+      </div>
+      <div class="addr">📍 24 Lebuh Chulia (delivered 09:42)</div>
+      <div class="meta"><span>2 items · -19°C handover</span><span style="color: #10b981;">✓ Done</span></div>
+    </div>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Mat Frozen Mart</span>
+        <span class="pill pill-active" style="margin-left:auto;">Delivered</span>
+      </div>
+      <div class="addr">📍 12 Jalan Bangsar (delivered 11:15)</div>
+      <div class="meta"><span>5 items · -18°C handover</span><span style="color: #10b981;">✓ Done</span></div>
+    </div>
+
+    <a href="active.html" class="m-card active" style="display: block; text-decoration: none; color: inherit;">
+      <div class="top">
+        <span class="seq">3</span>
+        <span class="ws">Mat Frozen Mart (re-order)</span>
+        <span class="pill pill-warn" style="margin-left:auto;">In progress</span>
+      </div>
+      <div class="addr">📍 12 Jalan Bangsar, KL</div>
+      <div class="meta"><span>2 items · RM 198.00</span><span style="font-weight:700; color:var(--red);">Tap to deliver →</span></div>
+    </a>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq">4</span>
+        <span class="ws">Pasar Murah Online</span>
+      </div>
+      <div class="addr">📍 15 Jln SS2/24, KL</div>
+      <div class="meta"><span>4 items · RM 155.00</span><span>~14:30</span></div>
+    </div>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq">5</span>
+        <span class="ws">Kedai Runcit Hjh Aminah</span>
+      </div>
+      <div class="addr">📍 8 Jalan Damansara, KL</div>
+      <div class="meta"><span>3 items · RM 88.00</span><span>~15:30</span></div>
+    </div>
+
+  </main>
+
+  <div data-slot="bottom-nav"></div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    const M = window.SheepyMock;
+    document.getElementById('userName').textContent = M.state.currentUserName || 'Encik Faizal';
+    const bnHtml = window.SheepyNav.BOTTOM_NAVS.driver.map(it => `
+      <a href="${it.href}" class="m-bn-item${it.key === 'routes' ? ' active' : ''}">
+        <span class="icon">${it.icon}</span><span>${it.label}</span>
+      </a>`).join('');
+    document.querySelector('[data-slot="bottom-nav"]').outerHTML = `<nav class="m-bottom-nav">${bnHtml}</nav>`;
+  </script>
+</body>
+</html>

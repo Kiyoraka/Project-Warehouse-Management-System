@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Done · Packing · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <link rel="stylesheet" href="../shared/mobile.css" />
+</head>
+<body class="mobile-shell">
+
+  <header class="m-topbar">
+    <div>
+      <div class="greet">Today's Packs</div>
+      <div class="sub">4 completed · 0 returns</div>
+    </div>
+    <button class="icon-btn">📤</button>
+  </header>
+
+  <main class="m-content">
+
+    <div class="m-stats-grid">
+      <div class="m-stat-tile"><div class="num">4</div><div class="lbl">Packed Today</div></div>
+      <div class="m-stat-tile"><div class="num" style="color:#10b981;">100%</div><div class="lbl">FEFO Compliance</div></div>
+      <div class="m-stat-tile"><div class="num">38</div><div class="lbl">Units Packed</div></div>
+      <div class="m-stat-tile"><div class="num">14m</div><div class="lbl">Avg Pack Time</div></div>
+    </div>
+
+    <h3 style="margin-bottom: 12px; font-size: 1rem;">Completed Today</h3>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Mat Frozen Mart</span>
+        <span class="pill pill-active" style="margin-left:auto;">Sent to driver</span>
+      </div>
+      <div style="font-family: monospace; font-size: 0.85rem; color: var(--gray-700); margin-bottom: 4px;">SF-2026-0501-001</div>
+      <div class="addr">2 SKUs · 13 units · packed 09:38</div>
+      <div class="meta">
+        <span>FEFO ✓</span>
+        <span style="color: #10b981; font-weight: 700;">Pack time 12m</span>
+      </div>
+    </div>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Sambal Sedap Resto</span>
+        <span class="pill pill-active" style="margin-left:auto;">Sent to driver</span>
+      </div>
+      <div style="font-family: monospace; font-size: 0.85rem; color: var(--gray-700); margin-bottom: 4px;">SF-2026-0428-014</div>
+      <div class="addr">1 SKU · 8 units · packed 10:24</div>
+      <div class="meta">
+        <span>FEFO ✓</span>
+        <span style="color: #10b981; font-weight: 700;">Pack time 15m</span>
+      </div>
+    </div>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Kedai Hjh Aminah</span>
+        <span class="pill pill-info" style="margin-left:auto;">Held for pickup</span>
+      </div>
+      <div style="font-family: monospace; font-size: 0.85rem; color: var(--gray-700); margin-bottom: 4px;">SF-2026-0505-005</div>
+      <div class="addr">1 SKU · 6 units · packed 11:09</div>
+      <div class="meta">
+        <span>FEFO ✓</span>
+        <span style="color: #10b981; font-weight: 700;">Pack time 10m</span>
+      </div>
+    </div>
+
+    <div class="m-card">
+      <div class="top">
+        <span class="seq done">✓</span>
+        <span class="ws">Pasar Murah Online</span>
+        <span class="pill pill-active" style="margin-left:auto;">Sent to driver</span>
+      </div>
+      <div style="font-family: monospace; font-size: 0.85rem; color: var(--gray-700); margin-bottom: 4px;">SF-2026-0505-006</div>
+      <div class="addr">3 SKUs · 11 units · packed 12:48</div>
+      <div class="meta">
+        <span>FEFO ✓</span>
+        <span style="color: #10b981; font-weight: 700;">Pack time 18m</span>
+      </div>
+    </div>
+
+  </main>
+
+  <div data-slot="bottom-nav"></div>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    const bnHtml = window.SheepyNav.BOTTOM_NAVS.packing.map(it => `
+      <a href="${it.href}" class="m-bn-item${it.key === 'done' ? ' active' : ''}">
+        <span class="icon">${it.icon}</span><span>${it.label}</span>
+      </a>`).join('');
+    document.querySelector('[data-slot="bottom-nav"]').outerHTML = `<nav class="m-bottom-nav">${bnHtml}</nav>`;
+  </script>
+</body>
+</html>

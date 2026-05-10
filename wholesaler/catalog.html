@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catalog · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .region-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: rgba(254, 226, 226, 0.4);
+      border: 1px solid rgba(224, 36, 36, 0.2);
+      border-radius: var(--radius-md);
+      margin-bottom: 20px;
+    }
+    .region-banner .icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      display: grid; place-items: center;
+      flex-shrink: 0;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 14px;
+      margin-bottom: 20px;
+    }
+    .filter-row .search {
+      flex: 1; min-width: 200px;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px;
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .filter-row .search input { flex: 1; border: none; outline: none; }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+    .product-card {
+      padding: 0;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(224, 36, 36, 0.12);
+    }
+    .product-card .image {
+      aspect-ratio: 1.2;
+      background: linear-gradient(135deg, var(--white-soft), var(--gray-100));
+      display: grid; place-items: center;
+      font-size: 4rem;
+      position: relative;
+    }
+    .product-card .badge-halal {
+      position: absolute;
+      top: 10px; right: 10px;
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #10b981, #047857);
+      color: var(--white);
+      display: grid; place-items: center;
+      font-size: 0.7rem;
+      font-weight: 800;
+      box-shadow: var(--shadow-sm);
+    }
+    .product-card .body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+    .product-card .cat { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+    .product-card .name { font-weight: 700; font-size: 1rem; margin: 4px 0; line-height: 1.2; }
+    .product-card .meta { font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+    .product-card .footer-row {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--gray-100);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .product-card .price { font-weight: 800; color: var(--red); font-size: 1.05rem; }
+    .product-card .price-from { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; }
+    .product-card .moq { font-size: 0.72rem; color: var(--text-muted); }
+
+    .add-btn {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--red), var(--red-deep));
+      color: var(--white);
+      display: grid; place-items: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 10px var(--red-glow);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .add-btn:hover { transform: scale(1.1); }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Catalog</h1>
+        <div class="subtitle">Wholesale prices · all halal-certified · cold-chain delivered</div>
+      </div>
+      <div class="page-header-actions">
+        <a href="cart.html" class="btn btn-primary"><span>🛒</span> View Cart <span class="badge" id="cartBadge">3</span></a>
+      </div>
+    </div>
+
+    <div class="region-banner">
+      <div class="icon">📍</div>
+      <div>
+        <div style="font-weight: 700;">Your warehouse: <span id="whName">Klang Valley</span></div>
+        <div style="font-size: 0.85rem; color: var(--gray-700);">You can only buy from your assigned regional warehouse for cold-chain safety.</div>
+      </div>
+    </div>
+
+    <div class="filter-row glass-strong">
+      <div class="search">
+        <span>🔍</span>
+        <input type="text" placeholder="Search products..." />
+      </div>
+      <select class="form-select" style="width: auto;">
+        <option>All Categories</option>
+        <option>Frozen Meat</option>
+        <option>Frozen Seafood</option>
+        <option>Frozen Poultry</option>
+        <option>Frozen Vegetables</option>
+        <option>Frozen Ready-to-Eat</option>
+      </select>
+      <select class="form-select" style="width: auto;">
+        <option>All Storage Zones</option>
+        <option>Frozen -18°C</option>
+        <option>Deep Frozen -25°C</option>
+      </select>
+      <select class="form-select" style="width: auto;">
+        <option>Sort: Featured</option>
+        <option>Price: Low to High</option>
+        <option>Price: High to Low</option>
+        <option>Name A-Z</option>
+      </select>
+    </div>
+
+    <div class="product-grid" id="productGrid"></div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('wholesaler', 'catalog', { showSearch: true });
+
+    const M = window.SheepyMock;
+    const ws = M.getCurrentWholesaler();
+    const wh = M.getWarehouse(ws.assignedWarehouseId);
+    document.getElementById('whName').textContent = wh.name;
+
+    const products = M.state.products;
+    const html = products.map(p => {
+      const lowestPrice = Math.min(...p.variants.map(v => v.wholesalePrice));
+      const stock = p.variants.reduce((sum, v) => sum + (M.getStockFor(v.id, wh.id)?.available || 0), 0);
+      const variantSizes = p.variants.map(v => v.size).join(' · ');
+      const moq = Math.min(...p.variants.map(v => v.moq));
+      return `
+        <a href="product.html?id=${p.id}" class="product-card glass-strong" style="text-decoration:none; color:inherit;">
+          <div class="image">
+            ${p.image}
+            <div class="badge-halal">حلال</div>
+          </div>
+          <div class="body">
+            <div class="cat">${p.category}</div>
+            <div class="name">${p.name}</div>
+            <div class="meta">
+              <span>${p.storageZone}</span>
+              <span>· ${variantSizes}</span>
+            </div>
+            <div class="footer-row">
+              <div>
+                <div class="price-from">From</div>
+                <div class="price">${M.formatRM(lowestPrice)}</div>
+                <div class="moq">MOQ: ${moq}</div>
+              </div>
+              <div class="add-btn" onclick="event.preventDefault(); event.stopPropagation(); addToCart('${p.id}');">＋</div>
+            </div>
+          </div>
+        </a>`;
+    }).join('');
+    document.getElementById('productGrid').innerHTML = html;
+
+    function addToCart(id) {
+      // demo only — real impl would add via product detail with variant choice
+      alert('Tap the card to choose variant + qty (this is the catalog quick-add demo)');
+    }
+    window.addToCart = addToCart;
+
+    // Update cart badge
+    const cartCount = M.state.cart.reduce((s, i) => s + i.qty, 0);
+    document.getElementById('cartBadge').textContent = cartCount;
+  </script>
+</body>
+</html>

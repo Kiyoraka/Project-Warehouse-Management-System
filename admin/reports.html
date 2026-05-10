@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports · Admin · Sheepy Farm</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../shared/styles.css" />
+  <link rel="stylesheet" href="../shared/glass.css" />
+  <style>
+    .report-types {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .report-type-card {
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      border: 2px solid transparent;
+    }
+    .report-type-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .report-type-card.active {
+      border-color: var(--red);
+      background: rgba(255, 255, 255, 0.95);
+    }
+    .report-type-card .icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: var(--red-soft);
+      display: grid; place-items: center;
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+    }
+    .report-type-card h4 { font-size: 0.98rem; margin-bottom: 4px; }
+    .report-type-card p { font-size: 0.78rem; color: var(--text-muted); }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto auto;
+      gap: 12px;
+      padding: 16px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+    .filter-row .form-group { margin-bottom: 0; }
+
+    .preview-card {
+      padding: 0;
+      overflow: hidden;
+    }
+    .preview-header {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      background: rgba(250, 250, 250, 0.6);
+    }
+    .preview-header h3 { font-size: 1rem; }
+    .preview-meta { font-size: 0.82rem; color: var(--text-muted); }
+
+    .scroll-x { overflow-x: auto; }
+  </style>
+</head>
+<body class="app-shell">
+  <div data-slot="sidebar"></div>
+  <div data-slot="topbar"></div>
+
+  <main class="app-content">
+
+    <div class="page-header">
+      <div>
+        <h1>Reports</h1>
+        <div class="subtitle">Tabular reports · CSV / PDF export · scheduled email delivery</div>
+      </div>
+    </div>
+
+    <!-- Report type selector -->
+    <div class="report-types">
+      <div class="report-type-card glass-strong active" data-report="sales" onclick="selectReport('sales')">
+        <div class="icon">💰</div>
+        <h4>Sales Report</h4>
+        <p>Revenue · orders by date, warehouse, wholesaler</p>
+      </div>
+      <div class="report-type-card glass-strong" data-report="stock" onclick="selectReport('stock')">
+        <div class="icon">📦</div>
+        <h4>Stock Report</h4>
+        <p>Per-warehouse stock levels · reorder alerts</p>
+      </div>
+      <div class="report-type-card glass-strong" data-report="batch" onclick="selectReport('batch')">
+        <div class="icon">📅</div>
+        <h4>Batch Expiry</h4>
+        <p>Batches sorted by expiry · FEFO compliance</p>
+      </div>
+      <div class="report-type-card glass-strong" data-report="fefo" onclick="selectReport('fefo')">
+        <div class="icon">🔍</div>
+        <h4>FEFO Compliance</h4>
+        <p>Picks vs FEFO order · drift detection</p>
+      </div>
+      <div class="report-type-card glass-strong" data-report="halal" onclick="selectReport('halal')">
+        <div class="icon">✓</div>
+        <h4>Supplier Halal Cert</h4>
+        <p>JAKIM cert validity audit · expiring soon</p>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-row glass-strong">
+      <div class="form-group">
+        <label class="form-label">From</label>
+        <input class="form-input" type="date" value="2026-04-05" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">To</label>
+        <input class="form-input" type="date" value="2026-05-05" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Warehouse</label>
+        <select class="form-select">
+          <option>All</option>
+          <option>Klang Valley</option>
+          <option>Penang</option>
+          <option>Johor Bahru</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Wholesaler</label>
+        <select class="form-select">
+          <option>All</option>
+          <option>Mat Frozen Mart</option>
+          <option>Kedai Runcit Hjh Aminah</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary"><span>↻</span> Refresh</button>
+      <button class="btn btn-primary"><span>📤</span> Export</button>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-card glass-strong">
+      <div class="preview-header">
+        <div>
+          <h3 id="reportTitle">Sales Report</h3>
+          <div class="preview-meta" id="reportMeta">Apr 5 — May 5, 2026 · all warehouses · all wholesalers</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-ghost btn-sm">📊 CSV</button>
+          <button class="btn btn-ghost btn-sm">📄 PDF</button>
+          <button class="btn btn-ghost btn-sm">📧 Email</button>
+        </div>
+      </div>
+      <div class="scroll-x" id="reportBody"></div>
+    </div>
+
+  </main>
+
+  <script src="../shared/mock-data.js"></script>
+  <script src="../shared/nav.js"></script>
+  <script>
+    window.SheepyNav.insertNav('admin', 'reports', { showSearch: false });
+
+    const M = window.SheepyMock;
+    const reports = {
+      sales: {
+        title: 'Sales Report',
+        meta: 'Apr 5 — May 5, 2026 · all warehouses · all wholesalers',
+        render: () => {
+          const rows = M.state.orders.map(o => {
+            const ws = M.getWholesaler(o.wholesalerId);
+            const wh = M.getWarehouse(o.warehouseId);
+            const items = o.items.map(i => i.qty + '× ' + i.name).join(', ');
+            return `<tr>
+              <td><span style="font-family: monospace; font-weight:600;">${o.code}</span></td>
+              <td>${o.placedAt}</td>
+              <td>${ws.businessName}</td>
+              <td>${wh.name}</td>
+              <td style="font-size:0.85rem;">${items}</td>
+              <td style="text-align:right;"><strong>${M.formatRM(o.total)}</strong></td>
+              <td><span class="pill pill-active">${o.paymentStatus}</span></td>
+              <td><span class="chip">${o.status.replace(/_/g,' ')}</span></td>
+            </tr>`;
+          }).join('');
+          return `<table class="table">
+            <thead><tr><th>Order</th><th>Date</th><th>Wholesaler</th><th>Warehouse</th><th>Items</th><th style="text-align:right;">Total</th><th>Payment</th><th>Status</th></tr></thead>
+            <tbody>${rows}</tbody>
+            <tfoot><tr style="background:var(--white-soft); font-weight:700;">
+              <td colspan="5">TOTAL · ${M.state.orders.length} orders</td>
+              <td style="text-align:right;">${M.formatRM(M.state.orders.reduce((s,o)=>s+o.total,0))}</td>
+              <td colspan="2"></td>
+            </tr></tfoot>
+          </table>`;
+        }
+      },
+      stock: {
+        title: 'Stock Report',
+        meta: 'Snapshot · May 5, 2026 · all SKUs across all warehouses',
+        render: () => {
+          const rows = [];
+          M.state.products.forEach(p => p.variants.forEach(v => {
+            M.state.warehouses.forEach(w => {
+              const s = M.getStockFor(v.id, w.id);
+              if (!s) return;
+              const status = s.available <= s.reorderThreshold ? '<span class="pill pill-danger">REORDER</span>' :
+                             s.available <= s.reorderThreshold * 1.5 ? '<span class="pill pill-warn">low</span>' :
+                             '<span class="pill pill-active">healthy</span>';
+              rows.push(`<tr>
+                <td>${p.name}</td>
+                <td>${v.size}</td>
+                <td>${v.sku}</td>
+                <td>${w.name}</td>
+                <td style="text-align:right;">${s.available}</td>
+                <td style="text-align:right;">${s.reserved}</td>
+                <td style="text-align:right;">${s.reorderThreshold}</td>
+                <td>${status}</td>
+              </tr>`);
+            });
+          }));
+          return `<table class="table"><thead><tr><th>Product</th><th>Variant</th><th>SKU</th><th>Warehouse</th><th style="text-align:right;">Available</th><th style="text-align:right;">Reserved</th><th style="text-align:right;">Threshold</th><th>Status</th></tr></thead><tbody>${rows.join('')}</tbody></table>`;
+        }
+      },
+      batch: {
+        title: 'Batch Expiry Report',
+        meta: 'Active batches sorted by expiry date (FEFO order)',
+        render: () => {
+          const today = new Date('2026-05-05');
+          const rows = M.state.batches.slice().sort((a,b)=>a.expiryDate.localeCompare(b.expiryDate)).map(b => {
+            const v = M.getVariant(b.variantId);
+            const w = M.getWarehouse(b.warehouseId);
+            const sup = M.getSupplier(b.supplierId);
+            const days = Math.round((new Date(b.expiryDate) - today) / 86400000);
+            const flag = days < 60 ? '<span class="pill pill-danger">URGENT</span>' :
+                         days < 120 ? '<span class="pill pill-warn">soon</span>' :
+                         '<span class="pill pill-active">ok</span>';
+            return `<tr>
+              <td><span style="font-family: monospace;">${b.batchNo}</span></td>
+              <td>${v.product.name} ${v.size}</td>
+              <td>${w.name}</td>
+              <td>${sup.name}</td>
+              <td>${b.manufacturedDate}</td>
+              <td><strong>${b.expiryDate}</strong></td>
+              <td style="text-align:right;">${days}</td>
+              <td style="text-align:right;">${b.qtyRemaining} / ${b.qtyReceived}</td>
+              <td>${flag}</td>
+            </tr>`;
+          }).join('');
+          return `<table class="table"><thead><tr><th>Batch</th><th>Product</th><th>Warehouse</th><th>Supplier</th><th>Mfd</th><th>Expiry</th><th style="text-align:right;">Days</th><th style="text-align:right;">Qty</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+        }
+      },
+      fefo: {
+        title: 'FEFO Compliance Report',
+        meta: 'Picks vs FEFO ideal order · last 30 days · drift detection',
+        render: () => {
+          const sample = [
+            ['SF-2026-0501-001', 'Frozen Lamb 1kg', 'KL', 'B-2026-0421', 'B-2026-0421', '✓ Match', 'pill-active'],
+            ['SF-2026-0501-001', 'Frozen Beef 1kg', 'KL', 'B-2026-0405', 'B-2026-0405', '✓ Match', 'pill-active'],
+            ['SF-2026-0503-002', 'Frozen Squid 500g', 'KL', 'B-2026-0418', 'B-2026-0418', '✓ Match', 'pill-active'],
+            ['SF-2026-0503-002b', 'Frozen Lamb 1kg', 'KL', 'B-2026-0421', 'B-2026-0428', '⚠ Drift', 'pill-warn'],
+            ['SF-2026-0428-014', 'Frozen Beef 1kg', 'PEN', 'B-2026-0410', 'B-2026-0410', '✓ Match', 'pill-active'],
+          ];
+          const rows = sample.map(r => `<tr>
+            <td><span style="font-family:monospace; font-weight:600;">${r[0]}</span></td>
+            <td>${r[1]}</td>
+            <td>${r[2]}</td>
+            <td>${r[3]}</td>
+            <td>${r[4]}</td>
+            <td><span class="pill ${r[6]}">${r[5]}</span></td>
+          </tr>`).join('');
+          return `
+            <div style="padding: 16px 24px; background:var(--white-soft); border-bottom: 1px solid var(--border); display: flex; gap:24px; font-size: 0.9rem;">
+              <div><strong>Total picks:</strong> 142</div>
+              <div><strong>FEFO match:</strong> 138 (97.2%)</div>
+              <div style="color:var(--status-warn);"><strong>Drift events:</strong> 4</div>
+            </div>
+            <table class="table"><thead><tr><th>Order</th><th>Item</th><th>Warehouse</th><th>FEFO Suggests</th><th>Picker Chose</th><th>Result</th></tr></thead><tbody>${rows}</tbody></table>`;
+        }
+      },
+      halal: {
+        title: 'Supplier Halal Cert Validity',
+        meta: 'JAKIM certificate audit · suppliers in active supply chain',
+        render: () => {
+          const today = new Date('2026-05-05');
+          const rows = M.state.suppliers.map(s => {
+            const days = Math.round((new Date(s.halalCertValidUntil) - today) / 86400000);
+            const flag = days < 90 ? '<span class="pill pill-danger">EXPIRING SOON</span>' :
+                         days < 180 ? '<span class="pill pill-warn">renew soon</span>' :
+                         '<span class="pill pill-active">valid</span>';
+            const batchCount = M.state.batches.filter(b => b.supplierId === s.id && b.qtyRemaining > 0).length;
+            return `<tr>
+              <td><strong>${s.name}</strong><br><span style="font-size:0.78rem;color:var(--text-muted);">${s.code}</span></td>
+              <td><span style="font-family:monospace;">${s.halalCertNo}</span></td>
+              <td>${s.halalCertIssuer}</td>
+              <td>${s.halalCertValidUntil}</td>
+              <td style="text-align:right;">${days}</td>
+              <td style="text-align:right;">${batchCount}</td>
+              <td>${flag}</td>
+            </tr>`;
+          }).join('');
+          return `<table class="table"><thead><tr><th>Supplier</th><th>Cert No.</th><th>Issuer</th><th>Valid Until</th><th style="text-align:right;">Days Left</th><th style="text-align:right;">Active Batches</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table>`;
+        }
+      },
+    };
+
+    function selectReport(key) {
+      document.querySelectorAll('.report-type-card').forEach(c => c.classList.toggle('active', c.dataset.report === key));
+      const r = reports[key];
+      document.getElementById('reportTitle').textContent = r.title;
+      document.getElementById('reportMeta').textContent = r.meta;
+      document.getElementById('reportBody').innerHTML = r.render();
+    }
+    window.selectReport = selectReport;
+    selectReport('sales');
+  </script>
+</body>
+</html>
